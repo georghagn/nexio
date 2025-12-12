@@ -1,0 +1,117 @@
+// Copyright 2025 Georg Hagn
+// SPDX-License-Identifier: Apache-2.0
+
+package gsflog
+
+import (
+	"encoding/json"
+	"fmt"
+	"sort"
+	"strings"
+	"time"
+)
+
+// Fields ist ein Alias für Map, damit der Code lesbarer wird.
+type Fields map[string]interface{}
+
+// Formatter entscheidet, wie ein Log-Eintrag in Bytes umgewandelt wird.
+type Formatter interface {
+	Format(entry *Entry) ([]byte, error)
+}
+
+// Entry hält alle Daten eines Log-Ereignisses.
+type Entry struct {
+	Level     Level
+	Message   string
+	Timestamp time.Time
+	Fields    Fields
+}
+
+// --- 1. JSON Formatter (für Maschinen/Dateien) ---
+type JSONFormatter struct{}
+
+func (f *JSONFormatter) Format(e *Entry) ([]byte, error) {
+
+	// Wir bauen eine flache Map für das JSON
+	data := make(Fields)
+
+	// Basisdaten
+	data["time"] = e.Timestamp.Format(time.RFC3339)
+	data["level"] = e.Level.String()
+	data["msg"] = e.Message
+
+	// Benutzer-Felder hinzufügen
+	for k, v := range e.Fields {
+		data[k] = v
+	}
+
+	// Nach JSON konvertieren (mit Newline am Ende)
+	bytes, err := json.Marshal(data)
+	return append(bytes, '\n'), err
+}
+
+// --- 2. Text Formatter (für Menschen/Konsole) ---
+type TextFormatter struct {
+	UseColors bool
+}
+
+func (f *TextFormatter) Format(e *Entry) ([]byte, error) {
+
+	timestamp := e.Timestamp.Format("2006/01/02 15:04:05")
+
+	// Level String
+	lvl := e.Level.String()
+
+	// Farben (nur wenn gewünscht)
+	if f.UseColors {
+		lvl = colorize(e.Level, lvl)
+	}
+
+	// Felder formatieren (key=value)
+	var fieldStr string
+	if len(e.Fields) > 0 {
+
+		// Sortieren für konsistente Ausgabe
+		keys := make([]string, 0, len(e.Fields))
+		for k := range e.Fields {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+
+		var sb strings.Builder
+		for _, k := range keys {
+			sb.WriteString(fmt.Sprintf(" %s=%v", k, e.Fields[k]))
+		}
+		fieldStr = sb.String()
+	}
+
+	// Zusammenbauen: YYYY/MM/DD HH:MM:SS [LEVEL] Message key=value
+	line := fmt.Sprintf("%s [%s] %s%s\n", timestamp, lvl, e.Message, fieldStr)
+	return []byte(line), nil
+}
+
+// --- Helper: ANSI Farben ---
+func colorize(l Level, s string) string {
+	const (
+		Reset  = "\033[0m"
+		Red    = "\033[31m"
+		Yellow = "\033[33m"
+		Blue   = "\033[34m"
+		Gray   = "\033[37m"
+	)
+
+	var color string
+	switch l {
+	case LevelDebug:
+		color = Gray
+	case LevelInfo:
+		color = Blue
+	case LevelWarn:
+		color = Yellow
+	case LevelError:
+		color = Red
+	default:
+		color = Reset
+	}
+	return color + s + Reset
+}

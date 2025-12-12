@@ -1,0 +1,13 @@
+2025/12/11 17:10:42 [INFO ] Dies geht an Konsole UND Datei.
+2025/12/11 17:10:42 [WARN ] Achtung! Dies ist eine Warnung.
+2025/12/11 17:10:42 [ERROR] Kritischer Fehler simuliert.
+2025/12/11 17:11:49 [INFO ] Dies geht an Konsole UND Datei.
+2025/12/11 17:11:49 [WARN ] Achtung! Dies ist eine Warnung.
+2025/12/11 17:11:49 [ERROR] Kritischer Fehler simuliert.
+2025/12/11 17:12:16 [INFO ] Dies geht an Konsole UND Datei.
+2025/12/11 17:12:16 [WARN ] Achtung! Dies ist eine Warnung.
+2025/12/11 17:12:16 [ERROR] Kritischer Fehler simuliert.
+{"level":"INFO ","msg":"GSF System Start","time":"2025-12-12T18:41:08+01:00"}
+{"level":"INFO ","msg":"Setup complete.","time":"2025-12-12T18:41:08+01:00"}
+{"level":"INFO ","msg":"GSF Server bereit auf :8080","time":"2025-12-12T18:41:08+01:00"}
+{"level":"INFO ","msg":"Verfügbare Tasks: 'print_hello', 'db_cleanup', 'heavy_job'","time":"2025-12-12T18:41:08+01:00"}
