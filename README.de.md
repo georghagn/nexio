@@ -1,24 +1,17 @@
-Das ist der perfekte Abschluss. Eine gute Dokumentation ist das Aushängeschild eines Frameworks. Da **GSF** (Go Small Frameworks) modular aufgebaut ist, sollte das README erklären, wie die Teile einzeln funktionieren und wie sie zusammenspielen.
 
-Hier ist ein Entwurf für eine professionelle `README.md` für das Root-Verzeichnis deines Projekts. Sie enthält Architektur-Diagramme, Beispiele und erklärt die Design-Philosophie.
+# GSF (Go Small Frameworks) - Suite
 
-Du kannst den folgenden Block direkt in deine `README.md` Datei kopieren.
-
------
-
-# GSF - Go Small Frameworks
-
-**GSF** ist eine Suite von kleinen, spezialisierten und modularen Go-Paketen, inspiriert von der "Tiny Smalltalk Frameworks" Philosophie.
+**GSF-Suite** ist eine Suite von kleinen, spezialisierten und modularen Go-Paketen, inspiriert von der "Tiny Smalltalk Frameworks" Philosophie.
 Das Ziel: **Maximale Funktionalität bei minimalen Abhängigkeiten.** Wir nutzen fast ausschließlich die Go Standardbibliothek.
 
-## philosophie
+## Philosophie
 
   * **Zero Dependencies:** Keine aufgeblähten externen Libraries.
   * **Idiomatic Go:** Nutzung von Interfaces (`io.Writer`, `context.Context`), Goroutines und Channels.
   * **Modular:** Jedes Paket (`pkg/*`) kann unabhängig voneinander genutzt werden.
   * **Robust:** Thread-Safety und Panic-Recovery sind standardmäßig eingebaut.
 
-## 📦 Die Module
+## Die Module
 
 ### 1\. `pkg/rotate` - Der File Rotator
 
@@ -27,8 +20,6 @@ Ein robuster `io.WriteCloser`, der Dateien automatisch rotiert, wenn sie zu gro�
   * **Features:** Thread-safe, Strategy Pattern (Rotation, Archive, Retention).
   * **Strategies:** Size-based, Time-based, Gzip Compression, Max Files Retention.
   * **Besonderheit:** Funktioniert als Backend für *jeden* Logger.
-
-<!-- end list -->
 
 ```go
 w := rotate.New("app.log",
@@ -49,8 +40,6 @@ Ein strukturierter Logger mit Unterstützung für JSON, Farben und Kontext-Felde
       * **Inline Rotation:** Nutzt `pkg/rotate` direkt.
       * **External Rotation:** Nutzt `ReopenableWriter` für externe Tools (logrotate/Scheduler).
 
-<!-- end list -->
-
 ```go
 // JSON Output + Rotation
 log := gsflog.NewJSON(rotator, gsflog.LevelInfo)
@@ -66,8 +55,6 @@ reqLog.Info("Processing started")
 Ein Ticker-basierter Task Runner für Hintergrundaufgaben.
 
   * **Features:** One-Shot (`At`) & Interval (`Every`), Panic Recovery (kein Server-Crash bei Job-Fehlern), Graceful Shutdown, Introspection (`List`).
-
-<!-- end list -->
 
 ```go
 sched := schedule.New()
@@ -88,8 +75,6 @@ Ein flexibler RPC-Server, der Go-Methoden via Reflection automatisch verfügbar 
   * **Features:** JSON-RPC 2.0 Spec, HTTP & WebSocket Support, Reflection-based Service Registry.
   * **Highlight:** Trennung von Transport (HTTP/WS) und Logik.
 
-<!-- end list -->
-
 ```go
 type MyService struct{}
 func (s *MyService) Echo(args EchoArgs) (string, error) {
@@ -102,7 +87,7 @@ server.RegisterService(&MyService{}) // Exposes "MyService.Echo"
 http.Handle("/rpc", server)
 ```
 
-## 🚀 Integration: Die Suite
+## Integration: Die Suite
 
 Hier sehen wir, wie alle Module zu einer robusten Anwendung verschmelzen:
 
@@ -126,7 +111,7 @@ func main() {
 }
 ```
 
-## 🧪 Testing
+## Testing
 
 Jedes Modul verfügt über eine eigene Test-Suite inklusive Race-Detection.
 
@@ -140,4 +125,5 @@ go test ./pkg/... -race
 
 ## Lizenz
 
-MIT License - Feel free to use and modify.
+Apache 2.0 License - Feel free to use and modify.
+
