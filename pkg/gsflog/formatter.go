@@ -11,20 +11,9 @@ import (
 	"time"
 )
 
-// Fields ist ein Alias für Map, damit der Code lesbarer wird.
-type Fields map[string]interface{}
-
 // Formatter entscheidet, wie ein Log-Eintrag in Bytes umgewandelt wird.
 type Formatter interface {
 	Format(entry *Entry) ([]byte, error)
-}
-
-// Entry hält alle Daten eines Log-Ereignisses.
-type Entry struct {
-	Level     Level
-	Message   string
-	Timestamp time.Time
-	Fields    Fields
 }
 
 // --- 1. JSON Formatter (für Maschinen/Dateien) ---
@@ -36,9 +25,9 @@ func (f *JSONFormatter) Format(e *Entry) ([]byte, error) {
 	data := make(Fields)
 
 	// Basisdaten
-	data["time"] = e.Timestamp.Format(time.RFC3339)
+	data["time"] = e.Time.Format(time.RFC3339)
 	data["level"] = e.Level.String()
-	data["msg"] = e.Message
+	data["msg"] = e.Msg
 
 	// Benutzer-Felder hinzufügen
 	for k, v := range e.Fields {
@@ -57,7 +46,7 @@ type TextFormatter struct {
 
 func (f *TextFormatter) Format(e *Entry) ([]byte, error) {
 
-	timestamp := e.Timestamp.Format("2006/01/02 15:04:05")
+	timestamp := e.Time.Format("2006/01/02 15:04:05")
 
 	// Level String
 	lvl := e.Level.String()
@@ -86,7 +75,7 @@ func (f *TextFormatter) Format(e *Entry) ([]byte, error) {
 	}
 
 	// Zusammenbauen: YYYY/MM/DD HH:MM:SS [LEVEL] Message key=value
-	line := fmt.Sprintf("%s [%s] %s%s\n", timestamp, lvl, e.Message, fieldStr)
+	line := fmt.Sprintf("%s [%s] %s%s\n", timestamp, lvl, e.Msg, fieldStr)
 	return []byte(line), nil
 }
 

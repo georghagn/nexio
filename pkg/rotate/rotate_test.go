@@ -42,7 +42,6 @@ func TestRotator_Integration_Gzip(t *testing.T) {
 
 	// Jetzt sollte "app.log" nur "World!" enthalten.
 	// Und es sollte eine .gz Datei geben mit "Hello".
-
 	content, _ := os.ReadFile(logPath)
 	if string(content) != "World!" {
 		t.Errorf("Expected current log to contain 'World!', got '%s'", string(content))
@@ -79,6 +78,7 @@ func TestRotator_Retention(t *testing.T) {
 	// Wir erzeugen 5 Rotationen
 	for i := 0; i < 5; i++ {
 		w.Write([]byte("123456")) // Trigger Rotation
+
 		// Kleiner Sleep, damit die Zeitstempel der Dateien unterschiedlich sind
 		time.Sleep(10 * time.Millisecond)
 	}

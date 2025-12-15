@@ -1,14 +1,9 @@
-Verstanden. Eine spezifische Dokumentation für `pkg/gsflog` ist sehr sinnvoll, da das Modul durch die Einführung von `ReopenableWriter`, Formattern und Context (`With`) sehr mächtig geworden ist.
-
-Hier ist der Entwurf für **`pkg/gsflog/README.md`**. Er konzentriert sich besonders auf die Unterscheidung der Rotations-Strategien, da das oft der Punkt ist, an dem Missverständnisse entstehen.
-
------
 
 # gsflog - Go Small Framework Logger
 
 **gsflog** ist ein strukturierter, modularer Logger für Go, entwickelt nach der "Tiny Frameworks" Philosophie. Er trennt strikt zwischen Datenerfassung (`Logger`), Formatierung (`Formatter`) und Ausgabe (`io.Writer`).
 
-## 🌟 Features
+## Features
 
   * **Structured Logging:** Keine String-Verkettung mehr. Nutze Key-Value Paare (`With("user_id", 42)`).
   * **Formatters:**
@@ -17,12 +12,12 @@ Hier ist der Entwurf für **`pkg/gsflog/README.md`**. Er konzentriert sich beson
   * **Rotation Strategies:** Unterstützt sowohl **interne** (automatische) als auch **externe** (Signal/Scheduler-basierte) Datei-Rotation.
   * **Thread-Safe:** Sicherer Zugriff aus beliebig vielen Goroutinen.
 
-## 🚀 Quick Start
+## Quick Start
 
 ```go
 package main
 
-import "github.com/DEIN_USER/gsf-go/pkg/gsflog"
+import "github.com/georghagn/gsf-go/pkg/gsflog"
 
 func main() {
     // 1. Einfacher Konsolen-Logger (mit Farben)
@@ -36,7 +31,7 @@ func main() {
 }
 ```
 
-## ⚙️ Strategien für Datei-Logs & Rotation
+## Strategien für Datei-Logs & Rotation
 
 `gsflog` bietet zwei Wege, um Log-Dateien zu verwalten. Wähle den, der zu deiner Infrastruktur passt.
 
@@ -49,8 +44,8 @@ Hierbei nutzen wir das `pkg/rotate` Paket als Backend.
 
 ```go
 import (
-    "github.com/DEIN_USER/gsf-go/pkg/gsflog"
-    "github.com/DEIN_USER/gsf-go/pkg/rotate"
+    "github.com/georghagn/gsf-go/pkg/gsflog"
+    "github.com/georghang/gsf-go/pkg/rotate"
 )
 
 func main() {
@@ -77,8 +72,8 @@ Der Logger schreibt in eine Datei, aber ein **externer Prozess** (z.B. `logrotat
 
 ```go
 import (
-    "github.com/DEIN_USER/gsf-go/pkg/gsflog"
-    "github.com/DEIN_USER/gsf-go/pkg/schedule"
+    "github.com/georghagn/gsf-go/pkg/gsflog"
+    "github.com/georghagn/gsf-go/pkg/schedule"
 )
 
 func main() {
@@ -100,7 +95,7 @@ func main() {
 }
 ```
 
-## 🎨 Formatierung
+## Formatierung
 
 ### JSON (Production)
 
@@ -122,7 +117,7 @@ log.With("id", 1).Error("Fail")
 // Output: 2023/... [ERROR] Fail id=1 (in Rot)
 ```
 
-## 🛠 API Referenz
+## API Referenz
 
 ### Logger erstellen
 

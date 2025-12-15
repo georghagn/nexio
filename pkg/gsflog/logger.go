@@ -4,14 +4,12 @@
 package gsflog
 
 import (
-	"fmt"
 	"io"
-	"os"
 	"sync"
 	"time"
 )
 
-// Level Definitionen (bleiben wie vorher)
+// Level Definitionen
 type Level int
 
 const (
@@ -36,6 +34,17 @@ func (l Level) String() string {
 	}
 }
 
+// Fields ist ein Alias für Map, damit der Code lesbarer wird.
+type Fields map[string]any
+
+// Entry hält alle Daten eines Log-Ereignisses.
+type Entry struct {
+	Level  Level
+	Msg    string
+	Time   time.Time
+	Fields Fields
+}
+
 // Logger Struktur
 type Logger struct {
 	threshold Level
@@ -58,19 +67,14 @@ func New(out io.Writer, threshold Level, formatter Formatter) *Logger {
 	}
 }
 
-// NewConsole (Helper mit Farben)
-func NewConsole(threshold Level) *Logger {
-	return New(os.Stdout, threshold, &TextFormatter{UseColors: true})
-}
-
-// NewJSON (Helper für Production Files)
-func NewJSON(out io.Writer, threshold Level) *Logger {
-	return New(out, threshold, &JSONFormatter{})
+func (l *Logger) SetLevel(level Level) {
+	l.threshold = level
 }
 
 // With fügt Kontext hinzu und gibt einen NEUEN Logger zurück (Fluent Interface).
 // Der alte Logger bleibt unberührt.
 func (l *Logger) With(key string, value interface{}) *Logger {
+
 	// 1. Kopiere bestehende Felder
 	newFields := make(Fields)
 	l.mu.Lock()
@@ -98,10 +102,10 @@ func (l *Logger) log(level Level, msg string) {
 	}
 
 	entry := &Entry{
-		Level:     level,
-		Message:   msg,
-		Timestamp: time.Now(),
-		Fields:    l.fields,
+		Level:  level,
+		Msg:    msg,
+		Time:   time.Now(),
+		Fields: l.fields,
 	}
 
 	// Formatieren
@@ -117,12 +121,7 @@ func (l *Logger) log(level Level, msg string) {
 	l.output.Write(bytes)
 }
 
-// Public API (Delegiert an log)
-func (l *Logger) Debug(msg string) { l.log(LevelDebug, msg) }
-func (l *Logger) Info(msg string)  { l.log(LevelInfo, msg) }
-func (l *Logger) Warn(msg string)  { l.log(LevelWarn, msg) }
-func (l *Logger) Error(msg string) { l.log(LevelError, msg) }
-
+/*
 // Infof etc. unterstützen wir auch noch, aber "With()" ist moderner
 func (l *Logger) Infof(format string, args ...interface{}) {
 	// Hinweis: Wir nutzen hier fmt.Sprintf intern, bevor wir es dem Logger geben
@@ -143,3 +142,4 @@ func (l *Logger) Errorf(format string, args ...interface{}) {
 func (l *Logger) Debugf(format string, args ...interface{}) {
 	l.log(LevelDebug, fmt.Sprintf(format, args...))
 }
+*/

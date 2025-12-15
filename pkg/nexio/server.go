@@ -69,8 +69,6 @@ func (s *Server) Register(methodName string, handler HandlerFunc) {
 	s.handlers[methodName] = handler
 }
 
-// --- REFLECTION LOGIK (Das fehlte dir!) ---
-
 // RegisterService nimmt ein Struct und registriert alle Methoden als RPC-Handler.
 // Name-Schema: "StructName.MethodName"
 func (s *Server) RegisterService(service interface{}) error {

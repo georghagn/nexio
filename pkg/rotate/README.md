@@ -56,7 +56,6 @@ Hier erstellen wir einen Rotator, der:
   * Die alten Dateien mit **Gzip** komprimiert (`.gz`).
   * Nur die **5 neuesten** Backups behält.
 
-<!-- end list -->
 
 ```go
 writer := rotate.New("server.log",

@@ -1,8 +1,3 @@
-Natürlich\! Eine README für den Scheduler ist wichtig, da sich hier oft Fragen zur **Concurrency** (Nebenläufigkeit), **Sicherheit** (Panics) und zum **Shutdown-Verhalten** stellen.
-
-Hier ist der Entwurf für **`pkg/schedule/README.md`**.
-
------
 
 # gsf/schedule - Go Small Framework Scheduler
 
@@ -11,7 +6,7 @@ Er wurde entwickelt, um wiederkehrende Aufgaben oder einmalige Tasks auszuführe
 
 Im Gegensatz zu einem einfachen `time.Ticker` bietet dieses Paket **Panic Recovery**, **Job-Management (Start/Stop)** und **Graceful Shutdown**.
 
-## 🌟 Features
+## Features
 
   * **Simple API:** Intuitive Methoden wie `Every` und `At`.
   * **Panic Recovery:** Wenn ein Job abstürzt (panic), fängt der Scheduler den Fehler ab. Deine Hauptanwendung stürzt nicht ab.
@@ -19,7 +14,7 @@ Im Gegensatz zu einem einfachen `time.Ticker` bietet dieses Paket **Panic Recove
   * **Graceful Shutdown:** `StopAll()` wartet, bis laufende Jobs beendet sind, bevor das Programm beendet wird.
   * **Introspection:** Abfragen von Laufzeit-Statistiken (`NextRun`, `Interval`) via `List()` – ideal für Status-Dashboards oder RPC.
 
-## 🚀 Quick Start
+## Quick Start
 
 ```go
 package main
@@ -27,7 +22,7 @@ package main
 import (
     "fmt"
     "time"
-    "github.com/DEIN_USER/gsf-go/pkg/schedule"
+    "github.com/georghagn/gsf-go/pkg/schedule"
 )
 
 func main() {
@@ -53,7 +48,7 @@ func main() {
 }
 ```
 
-## ⚙️ Kern-Konzepte
+## Kern-Konzepte
 
 ### Recurring Jobs (`Every`)
 
@@ -89,7 +84,7 @@ sched.Every(1*time.Second, func() {
 // Der Scheduler und andere Jobs laufen weiter.
 ```
 
-## 🛠 Management & Introspection
+## Management & Introspection
 
 ### Jobs stoppen
 
@@ -124,7 +119,7 @@ sched.StopAll() // 1. Sendet Stop-Signal an alle Jobs
                 // 2. Wartet (blockierend), bis alle aktuell laufenden Ausführungen fertig sind
 ```
 
-## ⚠️ Grenzen (Design Philosophy)
+## Grenzen (Design Philosophy)
 
   * **In-Process:** Die Jobs leben im RAM. Startet die App neu, sind alle dynamisch geplanten Jobs weg (es sei denn, du lädst sie beim Start neu).
   * **Nicht Persistent:** Es gibt keine eingebaute Datenbank. Für kritische Jobs, die einen Neustart überleben müssen, sollte eine externe Queue oder DB genutzt werden.

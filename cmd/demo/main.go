@@ -6,7 +6,9 @@ package main
 import (
 	//"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/georghagn/gsf-go/pkg/gsflog"
@@ -44,7 +46,7 @@ type StartArgs struct {
 
 // Start startet einen neuen Job.
 func (s *SchedulerRPC) Start(args StartArgs) (int64, error) {
-	
+
 	// 1. Task suchen
 	taskFunc, exists := taskRegistry[args.TaskName]
 	if !exists {
@@ -89,17 +91,22 @@ func (s *SchedulerRPC) List(args EmptyArgs) ([]schedule.JobInfo, error) {
 
 // --- 3. Main ---
 func main() {
+
 	// 1. Logger Setup
 	// ACHTUNG: Für den Rotator nutzen wir einen Console-Logger,
-	// um die Endlosschleife (Logger -> Rotator -> Logger) zu verhindern.
+	// A. Debug-Logger nur für den Rotator, um die Endlosschleife (Logger -> Rotator -> Logger) zu verhindern.
 	consoleLog := gsflog.NewConsole(gsflog.LevelDebug)
 
 	rotator := rotate.New("app.log", nil, nil, nil)
 	rotator.SetLogger(consoleLog) // Rotator "spricht" zur Konsole
 	defer rotator.Close()
 
-	// Der Haupt-Logger schreibt in Datei UND Konsole
-	mainLog := gsflog.NewJSON(rotator, gsflog.LevelInfo)
+	// B. Haupt-Logger (mainLogger): Soll in Datei UND Konsole schreiben
+	// Wir kombinieren Stdout und Rotator
+	multiOutput := io.MultiWriter(os.Stdout, rotator)
+
+	// mainLog schreibt jetzt Console UND Datei
+	mainLog := gsflog.NewJSON(multiOutput, gsflog.LevelInfo)
 	mainLog.Info("GSF System Start")
 
 	// 2. Scheduler Setup & Injection

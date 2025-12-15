@@ -56,9 +56,6 @@ type GzipCompression struct{}
 
 func (s *GzipCompression) Archive(path string) (string, error) {
 
-	// Erst umbenennen, damit der Logger sofort weiterarbeiten kann?
-	// Nein, wir lesen die geschlossene Datei und schreiben eine .gz Datei.
-
 	timestamp := time.Now().Format("20060102-150405.000")
 	gzName := fmt.Sprintf("%s-%s.gz", path, timestamp)
 
