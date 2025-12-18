@@ -11,35 +11,35 @@ import (
 	"time"
 )
 
-// Formatter entscheidet, wie ein Log-Eintrag in Bytes umgewandelt wird.
+// The formatter determines how a log entry is converted into bytes.
 type Formatter interface {
 	Format(entry *Entry) ([]byte, error)
 }
 
-// --- 1. JSON Formatter (für Maschinen/Dateien) ---
+// --- 1. JSON Formatter (for machines/files) ---
 type JSONFormatter struct{}
 
 func (f *JSONFormatter) Format(e *Entry) ([]byte, error) {
 
-	// Wir bauen eine flache Map für das JSON
+	// We are building a flat map for the JSON
 	data := make(Fields)
 
-	// Basisdaten
+	// Base Data
 	data["time"] = e.Time.Format(time.RFC3339)
 	data["level"] = e.Level.String()
 	data["msg"] = e.Msg
 
-	// Benutzer-Felder hinzufügen
+	// Adding user-fields
 	for k, v := range e.Fields {
 		data[k] = v
 	}
 
-	// Nach JSON konvertieren (mit Newline am Ende)
+	// convert to JSON (with Newline at end)
 	bytes, err := json.Marshal(data)
 	return append(bytes, '\n'), err
 }
 
-// --- 2. Text Formatter (für Menschen/Konsole) ---
+// --- 2. Text Formatter (for humans/console) ---
 type TextFormatter struct {
 	UseColors bool
 }
@@ -51,16 +51,16 @@ func (f *TextFormatter) Format(e *Entry) ([]byte, error) {
 	// Level String
 	lvl := e.Level.String()
 
-	// Farben (nur wenn gewünscht)
+	// Colours (only if desired)
 	if f.UseColors {
 		lvl = colorize(e.Level, lvl)
 	}
 
-	// Felder formatieren (key=value)
+	// Foramte fields (key=value)
 	var fieldStr string
 	if len(e.Fields) > 0 {
 
-		// Sortieren für konsistente Ausgabe
+		// Sort for consistent output
 		keys := make([]string, 0, len(e.Fields))
 		for k := range e.Fields {
 			keys = append(keys, k)
@@ -74,12 +74,12 @@ func (f *TextFormatter) Format(e *Entry) ([]byte, error) {
 		fieldStr = sb.String()
 	}
 
-	// Zusammenbauen: YYYY/MM/DD HH:MM:SS [LEVEL] Message key=value
+	// Building: YYYY/MM/DD HH:MM:SS [LEVEL] Message key=value
 	line := fmt.Sprintf("%s [%s] %s%s\n", timestamp, lvl, e.Msg, fieldStr)
 	return []byte(line), nil
 }
 
-// --- Helper: ANSI Farben ---
+// --- Helper: ANSI Colours ---
 func colorize(l Level, s string) string {
 	const (
 		Reset  = "\033[0m"

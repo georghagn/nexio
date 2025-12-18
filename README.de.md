@@ -1,129 +1,131 @@
 
-# GSF (Go Small Frameworks) - Suite
+|<sub>🇬🇧 [English translation →](README.en.md)</sub>|
+|----:|
+|    |
 
-**GSF-Suite** ist eine Suite von kleinen, spezialisierten und modularen Go-Paketen, inspiriert von der "Tiny Smalltalk Frameworks" Philosophie.
-Das Ziel: **Maximale Funktionalität bei minimalen Abhängigkeiten.** Wir nutzen fast ausschließlich die Go Standardbibliothek.
+||[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE) [![Dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)](#)|
+|----|----|
+|![GSF-Suite-Logo](logo-suite.png)| ***GSF-Suite***<br>Die GSF - Suite ist eine Sammlung kleiner, unabhängiger Go-Module zum Bau **einfacher Services**. Teil der **Go Simple Frameworks Suite**|
 
-## Philosophie
+<sup>***GSF*** steht für ***Go Simple Frameworks*** — eine Sammlung von minimalistischen Tools für robuste Anwendungen.</sup>
 
-  * **Zero Dependencies:** Keine aufgeblähten externen Libraries.
-  * **Idiomatic Go:** Nutzung von Interfaces (`io.Writer`, `context.Context`), Goroutines und Channels.
-  * **Modular:** Jedes Paket (`pkg/*`) kann unabhängig voneinander genutzt werden.
-  * **Robust:** Thread-Safety und Panic-Recovery sind standardmäßig eingebaut.
+### Überblick
 
-## Die Module
+GSF (Go Simple Frameworks) ist eine Sammlung kleiner, unabhängiger Go-Module zum Bau **einfacher Services**.
 
-### 1\. `pkg/rotate` - Der File Rotator
+Der Fokus liegt auf **Klarheit, wenigen Abhängigkeiten und expliziter Zusammensetzung**, nach dem Prinzip einer pragmatischen *90%-Lösung*.
 
-Ein robuster `io.WriteCloser`, der Dateien automatisch rotiert, wenn sie zu groß oder zu alt werden.
+Dieses Repository (`gsf-go`) enthält die Go-Implementierung von GSF.
 
-  * **Features:** Thread-safe, Strategy Pattern (Rotation, Archive, Retention).
-  * **Strategies:** Size-based, Time-based, Gzip Compression, Max Files Retention.
-  * **Besonderheit:** Funktioniert als Backend für *jeden* Logger.
+---
 
-```go
-w := rotate.New("app.log",
-    &rotate.SizePolicy{MaxBytes: 10*1024*1024}, // 10 MB
-    &rotate.GzipCompression{},                  // .gz Kompression
-    &rotate.MaxFiles{MaxBackups: 5},            // Max 5 Backups
-)
-defer w.Close()
-w.Write([]byte("Log Entry..."))
-```
+### Designprinzipien
 
-### 2\. `pkg/gsflog` - Der Logger
+- **Einfachheit zuerst** – kleine APIs, klare Verantwortung
+- **90%-Lösungen** – praktikabel statt perfekt
+- **Wenig Abhängigkeiten** – Standardbibliothek bevorzugt
+- **Lose Kopplung** – Kommunikation über Interfaces
+- **Sprachunabhängige Architektur** – geeignet für Polyglot-Systeme
 
-Ein strukturierter Logger mit Unterstützung für JSON, Farben und Kontext-Feldern.
+---
 
-  * **Features:** Structured Logging (JSON/Text), Log-Levels, `With(key, val)` Kontext, Color-Support.
-  * **Modi:**
-      * **Inline Rotation:** Nutzt `pkg/rotate` direkt.
-      * **External Rotation:** Nutzt `ReopenableWriter` für externe Tools (logrotate/Scheduler).
+### Module
 
-```go
-// JSON Output + Rotation
-log := gsflog.NewJSON(rotator, gsflog.LevelInfo)
+Bitte beachten Sie auch die README in den jeweiligen Modulen.
 
-// Kontext hinzufügen (Fluent Interface)
-reqLog := log.With("request_id", "123").With("user_id", 42)
-reqLog.Info("Processing started") 
-// Output: {"level":"INFO","msg":"Processing started","request_id":"123","user_id":42,...}
-```
+#### `gsflog`
+Ein minimaler Logger mit Loglevels und strukturierten Feldern.
 
-### 3\. `pkg/schedule` - Der Scheduler
+- Schreibt auf beliebige `io.Writer`
+- Keine Archivierung, Rotation oder Retention
+- Kein Ersatz für etablierte Logging-Frameworks
 
-Ein Ticker-basierter Task Runner für Hintergrundaufgaben.
+Verantwortung:
+> Logmeldungen formatieren und ausgeben
 
-  * **Features:** One-Shot (`At`) & Interval (`Every`), Panic Recovery (kein Server-Crash bei Job-Fehlern), Graceful Shutdown, Introspection (`List`).
+---
 
-```go
-sched := schedule.New()
+#### `rotate`
+Ein generisches Modul zur Dateirotation.
 
-// Job starten
-id := sched.Every(5*time.Minute, func() {
-    fmt.Println("DB Cleanup...")
-})
+- Arbeitet ausschließlich auf Dateien
+- Rotation nach Größe und/oder Zeit
+- Archivierungs- und Retention-Strategien austauschbar
+- Keine Abhängigkeit zu Logging
 
-// Job stoppen
-sched.Cancel(id)
-```
+Verantwortung:
+> Dateien nach Policies behandeln
 
-### 4\. `pkg/nexio` - JSON-RPC 2.0 Server
+---
 
-Ein flexibler RPC-Server, der Go-Methoden via Reflection automatisch verfügbar macht.
+#### `schedule`
+Ein einfacher Scheduler für zeitgesteuerte Jobs.
 
-  * **Features:** JSON-RPC 2.0 Spec, HTTP & WebSocket Support, Reflection-based Service Registry.
-  * **Highlight:** Trennung von Transport (HTTP/WS) und Logik.
+- Periodische Jobs (`Every`)
+- Einmalige Jobs (`At`)
+- Panic-sichere Ausführung
+- Optionales Logger-Interface
 
-```go
-type MyService struct{}
-func (s *MyService) Echo(args EchoArgs) (string, error) {
-    return args.Text, nil
-}
+Verantwortung:
+> Jobs zeitgesteuert ausführen
 
-// ...
-server := nexio.New()
-server.RegisterService(&MyService{}) // Exposes "MyService.Echo"
-http.Handle("/rpc", server)
-```
+---
 
-## Integration: Die Suite
+### Zusammenspiel
 
-Hier sehen wir, wie alle Module zu einer robusten Anwendung verschmelzen:
+Die Module werden explizit zusammengesetzt:
 
-```go
-func main() {
-    // 1. Logging mit Rotation
-    rotator := rotate.New("server.log", nil, nil, nil)
-    log := gsflog.NewJSON(rotator, gsflog.LevelInfo)
-    
-    // 2. Scheduler
-    sched := schedule.New()
-    sched.Every(1*time.Hour, func() { log.Info("System Check OK") })
+- `gsflog` schreibt auf ein `io.Writer`
+- `rotate.Writer` implementiert `io.Writer`
+- `schedule` kann Rotation oder Reopen auslösen
 
-    // 3. RPC Service
-    server := nexio.New()
-    // ... Register Services ...
+Es gibt **keine festen Abhängigkeiten** zwischen den Modulen.
+Die Integration erfolgt auf Anwendungsebene.
 
-    // 4. Start
-    log.Info("GSF App startet auf :8080")
-    http.ListenAndServe(":8080", nil)
-}
-```
+---
 
-## Testing
+### Beispiele
 
-Jedes Modul verfügt über eine eigene Test-Suite inklusive Race-Detection.
+Im Verzeichnis `cmd/` befinden sich lauffähige Beispiele:
 
-```bash
-# Alle Tests ausführen
-go test ./pkg/... -v
+- `cmd/main.go` – vollständiges Beispiel
+- `cmd/rotate/main.go` – Rotation isoliert
+- `cmd/schedule/main.go` – Scheduler isoliert
 
-# Race Conditions prüfen (Wichtig für Concurrency!)
-go test ./pkg/... -race
-```
+Die Beispiele dienen bewusst als ausführbare Dokumentation.
 
-## Lizenz
+---
 
-Apache 2.0 License - Feel free to use and modify.
+### Nicht-Ziele
+
+GSF stellt bewusst **keine** Plattform bereit für:
+
+- verteiltes Logging
+- Tracing
+- Metriken
+- Service Discovery
+- Konfigurations-Frameworks
+
+GSF ist Infrastruktur-Baustein, kein Framework.
+
+---
+
+### Lizenz
+
+Lizenziert unter der Apache License, Version 2.0.
+
+---
+
+## Contributing & Security
+
+Beiträge zur GSF Suite sind willkommen – sei es in Form von Bug-Reports,
+Verbesserungsvorschlägen oder Pull Requests.
+
+Bitte beachte dazu:
+- Hinweise zum Beitragen: siehe `CONTRIBUTING.md`
+- Verantwortungsvolle Meldung von Sicherheitslücken: siehe `SECURITY.md`
+
+Für normale Bugs oder Feature-Ideen nutze bitte GitHub Issues.
+Sicherheitsrelevante Themen sollten **nicht öffentlich** diskutiert werden.
+
 

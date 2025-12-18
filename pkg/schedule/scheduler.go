@@ -10,13 +10,13 @@ import (
 	"time"
 )
 
-// Logger Interface: Damit der Scheduler nicht vom konkreten gsflog abhängt.
+// Logger Interface: So that the scheduler does not depend on the specific gsflog.
 type Logger interface {
-	Errorf(format string, args ...interface{})
-	Infof(format string, args ...interface{})
+	Error(format string, args ...interface{})
+	Info(format string, args ...interface{})
 }
 
-// JobInfo ist ein DTO (Data Transfer Object) für die Außenwelt (read-only).
+// JobInfo is a DTO (Data Transfer Object) for the outside world (read-only).
 type JobInfo struct {
 	ID        int64         `json:"id"`
 	Interval  time.Duration `json:"interval"`
@@ -24,38 +24,38 @@ type JobInfo struct {
 	IsRunning bool          `json:"running"`
 }
 
-// JobID identifiziert einen laufenden Task eindeutig.
+// JobID uniquely identifies a running task.
 type JobID int64
 
-// Job repräsentiert eine geplante Aufgabe.
+// A job represents a planned task..
 type Job struct {
 	ID       JobID
-	Interval time.Duration // 0 wenn One-Shot
-	NextRun  time.Time     // Wann läuft er das nächste Mal? (für Status-Abfragen)
-	Fn       func()        // Die eigentliche Funktion
+	Interval time.Duration // 0 when One-Shot
+	NextRun  time.Time     // When will it run next? (for status queries)
+	Fn       func()        // The actual function
 
-	quit    chan struct{} // Kanal zum Stoppen dieses spezifischen Jobs
-	running bool          // Läuft er gerade aktiv?
+	quit    chan struct{} // Channel to stop this specific job
+	running bool          // Is it currently running?
 }
 
-// Scheduler verwaltet alle Jobs.
+// The scheduler manages all jobs.
 type Scheduler struct {
 	jobs   map[JobID]*Job
 	lastID int64
 	mu     sync.RWMutex
-	wg     sync.WaitGroup // Wartet auf laufende Jobs beim Shutdown
+	wg     sync.WaitGroup // Wait for ongoing jobs during the shutdown
 
-	logger Logger // Kann nil sein!
+	logger Logger // Can be nil!
 }
 
-// New erstellt einen neuen Scheduler.
+// New creates a new scheduler.
 func New() *Scheduler {
 	return &Scheduler{
 		jobs: make(map[JobID]*Job),
 	}
 }
 
-// SetLogger injiziert den Logger nachträglich.
+// SetLogger injects the logger afterwards.
 func (s *Scheduler) SetLogger(l Logger) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -64,22 +64,22 @@ func (s *Scheduler) SetLogger(l Logger) {
 
 // --- Public API ---
 
-// Every führt `task` alle `interval` Dauer aus. Gibt die JobID zurück.
+// Every executes `task` every `interval` duration. Returns the JobID.
 func (s *Scheduler) Every(interval time.Duration, task func()) JobID {
 	return s.addJob(interval, task, false)
 }
 
-// At führt `task` einmalig zum Zeitpunkt `t` aus.
+// At executes `task` once at time `t`.
 func (s *Scheduler) At(t time.Time, task func()) JobID {
-	// Zeit bis dahin berechnen
+	// Calculate the time until then
 	duration := time.Until(t)
 	if duration < 0 {
-		duration = 0 // Sofort ausführen
+		duration = 0 // eecute immediately
 	}
 	return s.addJob(duration, task, true)
 }
 
-// Cancel stoppt einen spezifischen Job.
+// Cancel stops a specific job.
 func (s *Scheduler) Cancel(id JobID) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -89,18 +89,18 @@ func (s *Scheduler) Cancel(id JobID) error {
 		return fmt.Errorf("job %d not found", id)
 	}
 
-	// Signal zum Stoppen senden
+	// Send a signal to stop
 	close(job.quit)
 	delete(s.jobs, id)
 	return nil
 }
 
-// WaitForShutdown wartet, bis alle Jobs beendet sind.
-// Sollte aufgerufen werden, nachdem Cancel() für alle Jobs oder Kontext-Cancellation erfolgt ist.
-// Hinweis: In dieser Implementierung stoppen wir Jobs manuell oder lassen sie auslaufen.
+// WaitForShutdown waits until all jobs have finished.
+// Should be called after Cancel() has been used for all jobs or after context cancellation.
+// Note: In this implementation, we stop jobs manually or let them expire.
 func (s *Scheduler) StopAll() {
 	s.mu.Lock()
-	// Wir kopieren die IDs, um Deadlocks zu vermeiden beim Iterieren + Löschen
+	// We copy the IDs to avoid deadlocks when iterating and deleting.
 	ids := make([]JobID, 0, len(s.jobs))
 	for id := range s.jobs {
 		ids = append(ids, id)
@@ -114,7 +114,7 @@ func (s *Scheduler) StopAll() {
 	s.wg.Wait()
 }
 
-// List gibt eine Kopie aller aktuellen Jobs zurück.
+// List returns a copy of all current jobs.
 func (s *Scheduler) List() []JobInfo {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -122,7 +122,7 @@ func (s *Scheduler) List() []JobInfo {
 	list := make([]JobInfo, 0, len(s.jobs))
 	for _, job := range s.jobs {
 		list = append(list, JobInfo{
-			ID:        int64(job.ID), // Cast auf int64 für JSON Freundlichkeit
+			ID:        int64(job.ID), // Cast to int64 for JSON friendliness
 			Interval:  job.Interval,
 			NextRun:   job.NextRun,
 			IsRunning: job.running,
@@ -131,14 +131,14 @@ func (s *Scheduler) List() []JobInfo {
 	return list
 }
 
-// --- Interne Logik ---
+// --- Interne Logic ---
 
 func (s *Scheduler) addJob(duration time.Duration, task func(), oneShot bool) JobID {
 	id := JobID(atomic.AddInt64(&s.lastID, 1))
 
 	job := &Job{
 		ID:       id,
-		Interval: duration, // Bei OneShot ist das die Wartezeit
+		Interval: duration, // In OneShot, that's the waiting time.
 		Fn:       task,
 		quit:     make(chan struct{}),
 		running:  true,
@@ -157,18 +157,18 @@ func (s *Scheduler) addJob(duration time.Duration, task func(), oneShot bool) Jo
 func (s *Scheduler) run(job *Job, initialDelay time.Duration, oneShot bool) {
 	defer s.wg.Done()
 
-	// Initial setzen
+	// set initial
 	s.mu.Lock()
 	job.NextRun = time.Now().Add(initialDelay)
 	s.mu.Unlock()
 
-	// Initialer Timer (Wartezeit bis zum ersten Start)
+	// Initial timer (waiting time until first start)
 	timer := time.NewTimer(initialDelay)
 
 	for {
 		select {
 		case <-job.quit:
-			// Job wurde manuell abgebrochen
+			// The job was manually cancelled.
 			if !timer.Stop() {
 				select {
 				case <-timer.C:
@@ -178,10 +178,10 @@ func (s *Scheduler) run(job *Job, initialDelay time.Duration, oneShot bool) {
 			return
 
 		case <-timer.C:
-			// 1. Task ausführen (mit Panic Protection)
+			// 1. Run task (with panic protection)
 			s.safeExecute(job)
 
-			// 2. Wenn One-Shot -> Aufräumen und Ende
+			// 2. If it's a one-shot -> clean up and end it
 			if oneShot {
 				s.mu.Lock()
 				delete(s.jobs, job.ID)
@@ -193,21 +193,22 @@ func (s *Scheduler) run(job *Job, initialDelay time.Duration, oneShot bool) {
 			job.NextRun = time.Now().Add(job.Interval)
 			s.mu.Unlock()
 
-			// 3. Wenn Intervall -> Timer neu setzen
+			// 3.If interval -> reset timer
 			timer.Reset(job.Interval)
 		}
 	}
 }
 
-// safeExecute fängt Panics ab, damit der Scheduler nicht crasht
+// safeExecute catches panics to prevent the scheduler from crashing.
 func (s *Scheduler) safeExecute(job *Job) {
 	defer func() {
 		if r := recover(); r != nil {
+			msg := fmt.Sprintf("SCHEDULER PANIC in Job %d: %v", job.ID, r)
 			if s.logger != nil {
-				s.logger.Errorf("SCHEDULER PANIC in Job %d: %v", job.ID, r)
+				s.logger.Error(msg)
 			} else {
-				// Fallback, falls kein Logger gesetzt wurde
-				fmt.Printf("SCHEDULER PANIC (No Logger): %v\n", r)
+				//Fallback if no logger was set
+				fmt.Println(msg)
 			}
 		}
 	}()

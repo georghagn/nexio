@@ -1,8 +1,0 @@
-{"level":"INFO ","msg":"Processing Request","req_id":"req-abc-123","time":"2025-12-12T17:52:16+01:00"}
-{"level":"ERROR","msg":"Transaction failed","req_id":"req-abc-123","time":"2025-12-12T17:52:16+01:00","user_id":42}
-{"level":"INFO ","msg":"Processing Request","req_id":"req-abc-123","time":"2025-12-12T17:53:19+01:00"}
-{"level":"ERROR","msg":"Transaction failed","req_id":"req-abc-123","time":"2025-12-12T17:53:19+01:00","user_id":42}
-{"level":"INFO ","msg":"Processing Request","req_id":"req-abc-123","time":"2025-12-12T17:56:30+01:00"}
-{"level":"ERROR","msg":"Transaction failed","req_id":"req-abc-123","time":"2025-12-12T17:56:30+01:00","user_id":42}
-{"level":"INFO ","msg":"Verarbeite Request...","time":"2025-12-14T22:50:33+01:00"}
-{"level":"INFO ","msg":"Processing Request","requestID":"req-abc-123","time":"2025-12-14T22:50:33+01:00","userID":512}

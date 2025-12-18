@@ -9,45 +9,45 @@ import (
 )
 
 func TestRotator_Integration_Gzip(t *testing.T) {
-	// 1. Temporäres Verzeichnis für diesen Test (wird automatisch gelöscht)
+	// 1. Temporary directory for this test (will be automatically deleted)
 	dir := t.TempDir()
 	logPath := filepath.Join(dir, "app.log")
 
-	// 2. Setup: Rotieren nach 10 Bytes, mit Gzip Kompression
+	// 2. Setup: Rotate after 10 bytes, using Gzip compression
 	w := New(logPath,
 		&SizePolicy{MaxBytes: 10},
 		&GzipCompression{},
-		&KeepAll{}, // Retention prüfen wir separat
+		&KeepAll{}, // We will review retention separately.
 	)
 	defer w.Close()
 
-	// 3. Schreiben (unter dem Limit)
-	// "Hello" = 5 Bytes
+	// 3. Writing (below the limit)
+	//    "Hello" = 5 Bytes
 	if _, err := w.Write([]byte("Hello")); err != nil {
 		t.Fatalf("Write failed: %v", err)
 	}
 
-	// Prüfen ob Datei existiert
+	// Check if file exists
 	checkFileExists(t, logPath)
 
-	// 4. Limit überschreiten
-	// "World!" = 6 Bytes. Total 11 > 10.
-	// Wichtig: Rotation passiert VOR dem Schreiben, wenn Limit schon erreicht WÄRE,
-	// oder BEIM nächsten Write.
-	// Unser Code prüft: current + new > max.
-	// 5 + 6 = 11 > 10. Also Rotation JETZT.
+	// 4. Limit exceeded
+	//    "World!" = 6 bytes. Total 11 > 10.
+	//    Important: Rotation happens BEFORE writing, if the limit would already be reached,
+	//    or on the next write.
+	//    Our code checks: current + new > max.
+	//    5 + 6 = 11 > 10. So rotation happens NOW.
 	if _, err := w.Write([]byte("World!")); err != nil {
 		t.Fatalf("Write 2 failed: %v", err)
 	}
 
-	// Jetzt sollte "app.log" nur "World!" enthalten.
-	// Und es sollte eine .gz Datei geben mit "Hello".
+	// Now, "app.log" should only contain "World!".
+	// And there should be a .gz file containing "Hello".
 	content, _ := os.ReadFile(logPath)
 	if string(content) != "World!" {
 		t.Errorf("Expected current log to contain 'World!', got '%s'", string(content))
 	}
 
-	// 5. Nach .gz Datei suchen
+	// 5. Search for .gz files
 	files, _ := os.ReadDir(dir)
 	foundGzip := false
 	for _, f := range files {
@@ -66,11 +66,11 @@ func TestRotator_Retention(t *testing.T) {
 	dir := t.TempDir()
 	logPath := filepath.Join(dir, "server.log")
 
-	// Wir wollen max 2 Backups behalten
+	// We want to keep a maximum of 2 backups.
 	maxBackups := 2
 	w := New(logPath,
-		&SizePolicy{MaxBytes: 5}, // Sehr kleines Limit
-		&NoCompression{},         // Einfaches Umbenennen reicht
+		&SizePolicy{MaxBytes: 5}, // Very small limit
+		&NoCompression{},         // Simply renaming is enough
 		&MaxFiles{MaxBackups: maxBackups},
 	)
 	defer w.Close()
@@ -79,14 +79,14 @@ func TestRotator_Retention(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		w.Write([]byte("123456")) // Trigger Rotation
 
-		// Kleiner Sleep, damit die Zeitstempel der Dateien unterschiedlich sind
+		// Small sleep timer so that the timestamps of the files are different.
 		time.Sleep(10 * time.Millisecond)
 	}
 
-	// Analyse des Ordners
+	// Analysis of the folder
 	entries, _ := os.ReadDir(dir)
 
-	// Wir erwarten: 1 aktives File + 2 Backups = 3 Dateien total
+	// We expect: 1 active file + 2 backups = 3 files total
 	expectedTotal := 1 + maxBackups
 	if len(entries) != expectedTotal {
 		t.Errorf("Retention failed. Expected %d files total, got %d", expectedTotal, len(entries))
@@ -111,7 +111,7 @@ func TestRotator_Concurrency(t *testing.T) {
 
 	for i := 0; i < goroutines; i++ {
 		go func(id int) {
-			<-start // Warten auf Startschuss
+			<-start // Waiting for the starting signal
 			for j := 0; j < writesPerRoutine; j++ {
 				w.Write([]byte("Data\n"))
 			}
@@ -119,25 +119,25 @@ func TestRotator_Concurrency(t *testing.T) {
 		}(i)
 	}
 
-	close(start) // Alle gleichzeitig loslassen
+	close(start) // Let go all at once
 
-	// Warten bis alle fertig
+	// Wait until everyone is ready
 	for i := 0; i < goroutines; i++ {
 		<-done
 	}
 
-	// Check: Wir haben nicht gecrasht.
-	// Optional: Größe prüfen.
-	// 10 Routines * 100 Writes * 5 Bytes ("Data\n") = 5000 Bytes Total.
-	// Da wir bei 1000 Bytes rotieren, sollten wir ca. 5 Dateien haben.
-	//time.Sleep(200 * time.Millisecond)
+	// Check: We didn't crash.
+	// Optional: Check size.
+	// 10 routines * 100 writes * 5 bytes ("Data\n") = 5000 bytes total.
+	// Since we rotate at 1000 bytes, we should have approximately 5 files.
+	// time.Sleep(200 * time.Millisecond)
 	entries, _ := os.ReadDir(dir)
 	if len(entries) < 4 {
 		t.Errorf("Expected rotations under load, got only %d files", len(entries))
 	}
 }
 
-// Helper Funktion
+// Helper Function
 func checkFileExists(t *testing.T, path string) {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		t.Fatalf("File %s does not exist", path)

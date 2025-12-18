@@ -4,142 +4,120 @@
 package gsflog
 
 import (
-	"io"
 	"sync"
-	"time"
 )
 
-// Level Definitionen
-type Level int
-
-const (
-	LevelDebug Level = iota
-	LevelInfo
-	LevelWarn
-	LevelError
-)
-
-func (l Level) String() string {
-	switch l {
-	case LevelDebug:
-		return "DEBUG"
-	case LevelInfo:
-		return "INFO "
-	case LevelWarn:
-		return "WARN "
-	case LevelError:
-		return "ERROR"
-	default:
-		return "UNKNOWN"
-	}
-}
-
-// Fields ist ein Alias für Map, damit der Code lesbarer wird.
-type Fields map[string]any
-
-// Entry hält alle Daten eines Log-Ereignisses.
-type Entry struct {
-	Level  Level
-	Msg    string
-	Time   time.Time
-	Fields Fields
-}
-
-// Logger Struktur
+// --- MultiLogger ---
 type Logger struct {
-	threshold Level
-	output    io.Writer
-	formatter Formatter
-	fields    Fields // Kontext-Daten (immutable concept)
-	mu        sync.Mutex
+	loggers map[string]LogSink
+	mu      sync.RWMutex
 }
 
-// New Logger
-func New(out io.Writer, threshold Level, formatter Formatter) *Logger {
-	if formatter == nil {
-		formatter = &TextFormatter{UseColors: false}
+func New() *Logger {
+	lgrs := make(map[string]LogSink)
+	return &Logger{loggers: lgrs}
+}
+
+func NewDefault(logFileName *string) *Logger {
+	consoleSink := NewDefaultConsoleSink()
+	fileSink := NewDefaultFileSink(logFileName)
+
+	mLogger := New()
+	mLogger.AddNamed("Console", consoleSink)
+	mLogger.AddNamed("File", fileSink)
+
+	return mLogger
+}
+
+func (m *Logger) AddNamed(name string, logger LogSink) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.loggers[name] = logger
+}
+
+func (m *Logger) RemoveNamed(name string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	delete(m.loggers, name)
+}
+
+func (m *Logger) List() []string {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	keys := make([]string, 0, len(m.loggers))
+	for k, _ := range m.loggers {
+		keys = append(keys, k)
+
 	}
-	return &Logger{
-		output:    out,
-		threshold: threshold,
-		formatter: formatter,
-		fields:    make(Fields),
+	return keys
+}
+
+func (m *Logger) Level() Level {
+	return LevelDebug
+}
+
+func (m *Logger) SetLevel(level Level) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for _, l := range m.loggers {
+		l.SetLevel(level)
 	}
 }
 
-func (l *Logger) SetLevel(level Level) {
-	l.threshold = level
-}
-
-// With fügt Kontext hinzu und gibt einen NEUEN Logger zurück (Fluent Interface).
-// Der alte Logger bleibt unberührt.
-func (l *Logger) With(key string, value interface{}) *Logger {
-
-	// 1. Kopiere bestehende Felder
-	newFields := make(Fields)
-	l.mu.Lock()
-	for k, v := range l.fields {
-		newFields[k] = v
+func (m *Logger) Debug(msg string) {
+	m.mu.RLock()
+	loggers := make([]LogSink, 0, len(m.loggers))
+	for _, l := range m.loggers {
+		loggers = append(loggers, l)
 	}
-	l.mu.Unlock()
-
-	// 2. Füge neues Feld hinzu
-	newFields[key] = value
-
-	// 3. Erstelle Klon des Loggers
-	return &Logger{
-		threshold: l.threshold,
-		output:    l.output,
-		formatter: l.formatter,
-		fields:    newFields, // Neue Map
+	m.mu.RUnlock()
+	for _, l := range m.loggers {
+		l.Debug(msg)
 	}
 }
 
-// log ist die interne Methode
-func (l *Logger) log(level Level, msg string) {
-	if level < l.threshold {
-		return
+func (m *Logger) Info(msg string) {
+	m.mu.RLock()
+	loggers := make([]LogSink, 0, len(m.loggers))
+	for _, l := range m.loggers {
+		loggers = append(loggers, l)
 	}
-
-	entry := &Entry{
-		Level:  level,
-		Msg:    msg,
-		Time:   time.Now(),
-		Fields: l.fields,
+	m.mu.RUnlock()
+	for _, l := range m.loggers {
+		l.Info(msg)
 	}
+}
 
-	// Formatieren
-	bytes, err := l.formatter.Format(entry)
-	if err != nil {
-		// Fallback, falls Formatierung fehlschlägt (sollte nicht passieren)
-		bytes = []byte("LOG FORMAT ERROR: " + err.Error() + "\n")
+func (m *Logger) Warn(msg string) {
+	m.mu.RLock()
+	loggers := make([]LogSink, 0, len(m.loggers))
+	for _, l := range m.loggers {
+		loggers = append(loggers, l)
 	}
-
-	// Schreiben (Thread-Safe)
-	l.mu.Lock()
-	defer l.mu.Unlock()
-	l.output.Write(bytes)
+	m.mu.RUnlock()
+	for _, l := range m.loggers {
+		l.Warn(msg)
+	}
 }
 
-/*
-// Infof etc. unterstützen wir auch noch, aber "With()" ist moderner
-func (l *Logger) Infof(format string, args ...interface{}) {
-	// Hinweis: Wir nutzen hier fmt.Sprintf intern, bevor wir es dem Logger geben
-	// Alternativ könnte man Message als interface{} definieren.
-	// Für Tiny halten wir es simpel:
-	l.log(LevelInfo, fmt.Sprintf(format, args...))
+func (m *Logger) Error(msg string) {
+	m.mu.RLock()
+	loggers := make([]LogSink, 0, len(m.loggers))
+	for _, l := range m.loggers {
+		loggers = append(loggers, l)
+	}
+	m.mu.RUnlock()
+	for _, l := range m.loggers {
+		l.Error(msg)
+	}
 }
 
-// Helper für formatierte Strings (wie printf)
-func (l *Logger) Warnf(format string, args ...interface{}) {
-	l.log(LevelWarn, fmt.Sprintf(format, args...))
+func (m *Logger) With(key string, value interface{}) LogSink {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	lgrs := make(map[string]LogSink)
+	for k, l := range m.loggers {
+		lgrs[k] = l.With(key, value)
+	}
+	return &Logger{loggers: lgrs}
 }
-
-func (l *Logger) Errorf(format string, args ...interface{}) {
-	l.log(LevelError, fmt.Sprintf(format, args...))
-}
-
-func (l *Logger) Debugf(format string, args ...interface{}) {
-	l.log(LevelDebug, fmt.Sprintf(format, args...))
-}
-*/

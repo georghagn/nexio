@@ -9,16 +9,16 @@ import (
 	"github.com/georghagn/gsf-go/pkg/rotate"
 )
 
-func NewFileLogger(out io.Writer, level Level, formatter Formatter) *Logger {
-	return New(out, level, formatter)
+func NewFileSink(out io.Writer, level Level, formatter Formatter) LogSink {
+	return NewSink(out, level, formatter)
 }
 
-func NewDefaultFileLogger(fileName *string) *Logger {
+func NewDefaultFileSink(fileName *string) LogSink {
 	fName := "app.log"
 	if fileName != nil {
 		fName = *fileName
 	}
 	jsonFormatter := &JSONFormatter{}
 	rotator := rotate.New(fName, nil, nil, nil)
-	return NewFileLogger(rotator, LevelInfo, jsonFormatter)
+	return NewFileSink(rotator, LevelInfo, jsonFormatter)
 }

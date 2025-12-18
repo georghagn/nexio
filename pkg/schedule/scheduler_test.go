@@ -9,23 +9,23 @@ func TestScheduler_Every_Cancel(t *testing.T) {
 	sched := New()
 	counter := 0
 
-	// Job: Zähle hoch
+	// Job: Count up
 	id := sched.Every(10*time.Millisecond, func() {
 		counter++
 	})
 
-	// Lass ihn kurz laufen (sollte ca 5-10 mal feuern)
+	// Let it run briefly (it should fire about 5-10 times)
 	time.Sleep(100 * time.Millisecond)
 
-	// Stoppen
+	// Stop
 	if err := sched.Cancel(id); err != nil {
 		t.Errorf("Cancel failed: %v", err)
 	}
 
-	// Merken wie hoch er ist
+	// Remember how high it is
 	valAfterCancel := counter
 
-	// Warten... er sollte NICHT weiter hochzählen
+	// Wait... he should NOT count up any further.
 	time.Sleep(50 * time.Millisecond)
 
 	if counter != valAfterCancel {
@@ -49,7 +49,7 @@ func TestScheduler_OneShot(t *testing.T) {
 		t.Fatal("OneShot job did not fire in time")
 	}
 
-	// Prüfen ob er aus der Map gelöscht wurde (Cleanup)
+	// Check if it has been deleted from the map (cleanup)
 	sched.mu.Lock()
 	count := len(sched.jobs)
 	sched.mu.Unlock()
@@ -62,14 +62,14 @@ func TestScheduler_OneShot(t *testing.T) {
 func TestScheduler_PanicRecovery(t *testing.T) {
 	sched := New()
 
-	// Dieser Job stürzt absichtlich ab
+	// This job is deliberately crashing.
 	sched.Every(10*time.Millisecond, func() {
 		panic("Boom!")
 	})
 
-	// Wenn der Scheduler keine Recovery hätte, würde der Test hier crashen.
+	// If the scheduler didn't have a recovery function, the test would crash here.
 	time.Sleep(50 * time.Millisecond)
 
 	sched.StopAll()
-	// Wenn wir hier ankommen, hat recover() funktioniert
+	// If we get here, recover() has worked.
 }

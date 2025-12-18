@@ -7,14 +7,14 @@ import (
 	"os"
 )
 
-// NewConsoleLogger (Helper mit Farben)
-func NewConsoleLogger(level Level, formatter Formatter) *Logger {
-	return New(os.Stdout, level, formatter)
+// NewConsoleLogger (Helper with colours)
+func NewConsoleSink(level Level, formatter Formatter) LogSink {
+	return NewSink(os.Stdout, level, formatter)
 }
 
-func NewDefaultConsoleLogger() *Logger {
+func NewDefaultConsoleSink() LogSink {
 	txtFormatter := &TextFormatter{
 		UseColors: true,
 	}
-	return NewConsoleLogger(LevelInfo, txtFormatter)
+	return NewConsoleSink(LevelInfo, txtFormatter)
 }

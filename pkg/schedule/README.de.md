@@ -1,7 +1,9 @@
 
-# gsf/schedule - Go Small Framework Scheduler
+<sub>🇬🇧 [English translation →](README.en.md)</sub>
 
-**gsf/schedule** ist ein leichtgewichtiger, robuster **In-Process Job Scheduler** für Go.
+## Überblick
+
+Der **GSF-Suite/Scheduler** ist ein leichtgewichtiger, robuster **In-Process Job Scheduler** für Go.
 Er wurde entwickelt, um wiederkehrende Aufgaben oder einmalige Tasks auszuführen, ohne externe Abhängigkeiten (wie Cron-Daemons) zu benötigen.
 
 Im Gegensatz zu einem einfachen `time.Ticker` bietet dieses Paket **Panic Recovery**, **Job-Management (Start/Stop)** und **Graceful Shutdown**.
@@ -13,6 +15,14 @@ Im Gegensatz zu einem einfachen `time.Ticker` bietet dieses Paket **Panic Recove
   * **Thread-Safe:** Sicherer Zugriff auf die Job-Liste aus mehreren Goroutinen.
   * **Graceful Shutdown:** `StopAll()` wartet, bis laufende Jobs beendet sind, bevor das Programm beendet wird.
   * **Introspection:** Abfragen von Laufzeit-Statistiken (`NextRun`, `Interval`) via `List()` – ideal für Status-Dashboards oder RPC.
+  * **Logging:** Optionales Logging
+
+## Installation
+
+```bash
+go get github.com/georghagn/gsf-go/pkg/schedule
+````
+
 
 ## Quick Start
 
@@ -70,10 +80,20 @@ sched.At(targetTime, func() {
     // Reminder Email senden
 })
 ```
+### Logging
+
+Standardmäßig wird kein Logger verwendet. Optional kann eine Logger-Implementierung injiziert werden.“
+Der Scheduler definiert lediglich ein kleines Logger-Interface:
+
+- `Info(format, ...args)`
+- `Error(format, ...args)`
+
+So bleibt das Modul unabhängig von konkreten Logger-Implementierungen.
+
 
 ### Panic Recovery (Crash Protection)
 
-Ein häufiges Problem bei selbstgebauten `go func()` Lösungen: Wenn der Code in der Goroutine "panic-ed", stürzt das **gesamte Programm** ab.
+Ein häufiges Problem bei selbstgebauten `go func()` Lösungen: Wenn der Code in der Goroutine eine "panic" auslöst, stürzt das **gesamte Programm** ab.
 `gsf/schedule` kapselt jeden Job in einer `recover()` Funktion.
 
 ```go
@@ -119,8 +139,26 @@ sched.StopAll() // 1. Sendet Stop-Signal an alle Jobs
                 // 2. Wartet (blockierend), bis alle aktuell laufenden Ausführungen fertig sind
 ```
 
+## Beispiele
+
+Typische Einsatzszenarien:
+
+- Auslösen von Dateirotation
+- Periodische Cleanup-Jobs
+- Zeitgesteuerte Wartungsaufgaben
+
+Ein lauffähiges Beispiel befindet sich unter `cmd/schedule-example/main.go`.
+
+
 ## Grenzen (Design Philosophy)
 
   * **In-Process:** Die Jobs leben im RAM. Startet die App neu, sind alle dynamisch geplanten Jobs weg (es sei denn, du lädst sie beim Start neu).
   * **Nicht Persistent:** Es gibt keine eingebaute Datenbank. Für kritische Jobs, die einen Neustart überleben müssen, sollte eine externe Queue oder DB genutzt werden.
   * **Kein "Distributed Lock":** Wenn du deine App 10x skalierst (z.B. in Kubernetes), läuft der Scheduler 10x.
+
+
+## License / Kontakt
+
+License, CONTRIBUTE.md, SECURITY.md und Kontaktinformationen findest du im Root der Suite
+
+

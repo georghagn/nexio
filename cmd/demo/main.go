@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/georghagn/gsf-go/pkg/gsflog"
-	"github.com/georghagn/gsf-go/pkg/nexio"
+	"github.com/georghagn/gsf-go/pkg/nexIO"
 	"github.com/georghagn/gsf-go/pkg/rotate"
 	"github.com/georghagn/gsf-go/pkg/schedule"
 )
@@ -35,7 +35,7 @@ var taskRegistry = map[string]func(){
 // Seine Methoden (Start, Stop, List) werden automatisch zu JSON-RPC.
 type SchedulerRPC struct {
 	Sched *schedule.Scheduler
-	Log   *gsflog.Logger
+	Log   *gsflog.Sink
 }
 
 // Argumente für "Scheduler.Start"

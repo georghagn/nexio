@@ -10,42 +10,53 @@ import (
 	"time"
 )
 
-// DebugLogger Interface für interne Diagnose
-type DebugLogger interface {
-	Debug(msg string)
+type EventEmitter interface {
+	SetEventHandler(func(Event))
+}
+
+type EventType int
+
+const (
+	EventRotate EventType = iota
+	EventError
+)
+
+type Event struct {
+	Type     EventType
+	Filename string
+	Err      error
 }
 
 type Writer struct {
 	filename      string
 	file          *os.File
 	currentSize   int64
-	openTimestamp time.Time // Wann wurde das aktuelle File geöffnet?
+	openTimestamp time.Time // When was the current file opened?
 
-	// Die Strategien
+	// The strategies
 	Rotation  RotationPolicy
 	Archive   ArchiveStrategy
 	Retention RetentionPolicy
 
-	mu sync.Mutex
-
-	Logger DebugLogger
+	mu      sync.Mutex
+	OnEvent func(Event)
 }
 
-// New erzeugt einen Writer mit Standard-Strategien (falls nil übergeben wird).
+// New creates a writer with default strategies (if nil is passed).
 func New(filename string, r RotationPolicy, a ArchiveStrategy, ret RetentionPolicy) *Writer {
 
-	// Defaults setzen für "Tiny" Usage (Convention over Configuration)
+	// Set defaults for "Tiny" usage (Convention over Configuration)
 	if r == nil {
 		r = &SizePolicy{MaxBytes: 10 * 1024 * 1024}
 	} // 10MB
 
 	if a == nil {
 		a = &NoCompression{}
-	} // Nur Umbenennen
+	} // rename only
 
 	if ret == nil {
 		ret = &KeepAll{}
-	} // Nichts löschen
+	} // delete nothing
 
 	return &Writer{
 		filename:  filename,
@@ -59,15 +70,15 @@ func (w *Writer) Write(p []byte) (n int, err error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
-	// 1. Datei öffnen falls nötig
+	// 1. Open file, if necessary
 	if w.file == nil {
 		if err := w.open(); err != nil {
 			return 0, err
 		}
 	}
 
-	// 2. Prüfen ob Rotation nötig (Delegation an Policy)
-	// Wir addieren len(p) hypothetisch dazu, um zu sehen, ob wir das Limit sprengen würden
+	// 2. Check if rotation is necessary (delegation to policy)
+	// We hypothetically add len(p) to see if we would exceed the limit.
 	timeOpen := time.Since(w.openTimestamp)
 	if w.Rotation.ShouldRotate(w.currentSize+int64(len(p)), timeOpen) {
 		if err := w.rotate(); err != nil {
@@ -75,7 +86,7 @@ func (w *Writer) Write(p []byte) (n int, err error) {
 		}
 	}
 
-	// 3. Schreiben
+	// 3. Write
 	n, err = w.file.Write(p)
 	w.currentSize += int64(n)
 	return n, err
@@ -87,11 +98,14 @@ func (w *Writer) Close() error {
 	return w.closeFile()
 }
 
-func (w *Writer) SetLogger(l DebugLogger) {
-	w.Logger = l
+// --- Internal Logic ---
+
+func (w *Writer) emit(e Event) {
+	if w.OnEvent != nil {
+		w.OnEvent(e)
+	}
 }
 
-// --- Interne Logik ---
 func (w *Writer) open() error {
 
 	dir := filepath.Dir(w.filename)
@@ -125,28 +139,36 @@ func (w *Writer) closeFile() error {
 }
 
 func (w *Writer) rotate() error {
-	if w.Logger != nil {
-		w.Logger.Debug("Rotating file: " + w.filename)
-	}
 
+	w.emit(Event{
+		Type:     EventRotate,
+		Filename: w.filename,
+	})
+
+	// 1. Close actual file
 	if err := w.closeFile(); err != nil {
+		w.emit(Event{
+			Type:     EventError,
+			Filename: w.filename,
+			Err:      err,
+		})
 		return err
 	}
 
-	// 1. Aktuelles File zu
-	if err := w.closeFile(); err != nil {
-		return err
-	}
-
-	// 2. Archivieren (z.B. Umbenennen oder Zippen)
+	// 2. Archiving (e.g., renaming or zipping)
 	if _, err := w.Archive.Archive(w.filename); err != nil {
-		return err // Wenn Archivieren fehlschlägt, versuchen wir es beim nächsten Write wieder
+		w.emit(Event{
+			Type:     EventError,
+			Filename: w.filename,
+			Err:      err,
+		})
+		return err // If archiving fails, we'll try again on the next write attempt.
 	}
 
-	// 3. Aufräumen (Alte Backups löschen)
-	// Wir ignorieren Fehler hier bewusst, Logs löschen ist "Best Effort"
+	// 3. Cleanup (Delete old backups)
+	// We are deliberately ignoring errors here; deleting logs is a "best effort" approach.
 	_ = w.Retention.Prune(w.filename)
 
-	// 4. Neues File auf
+	// 4. Open new file
 	return w.open()
 }

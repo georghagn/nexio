@@ -1,9 +1,14 @@
 
-# gsflog - Go Small Framework Logger
+<sub>🇬🇧 [English translation →](README.en.md)</sub>
 
-**gsflog** ist ein strukturierter, modularer Logger für Go, entwickelt nach der "Tiny Frameworks" Philosophie. Er trennt strikt zwischen Datenerfassung (`Logger`), Formatierung (`Formatter`) und Ausgabe (`io.Writer`).
+### Überblick
 
-## Features
+Der **GSF-Suite/Logger** ist ein strukturierter, modularer komponierbarer Logger für Go, entwickelt nach der "Tiny Frameworks" Philosophie. Er trennt strikt zwischen Datenerfassung (`Logger`), Formatierung (`Formatter`) und Ausgabe (`io.Writer`).
+
+Er richtet sich an kleine Services und Infrastruktur-Code, bei denen Einfachheit und explizite Kontrolle wichtiger sind als Funktionsvielfalt.
+
+
+### Features
 
   * **Structured Logging:** Keine String-Verkettung mehr. Nutze Key-Value Paare (`With("user_id", 42)`).
   * **Formatters:**
@@ -12,123 +17,101 @@
   * **Rotation Strategies:** Unterstützt sowohl **interne** (automatische) als auch **externe** (Signal/Scheduler-basierte) Datei-Rotation.
   * **Thread-Safe:** Sicherer Zugriff aus beliebig vielen Goroutinen.
 
-## Quick Start
 
-```go
-package main
+### Installation
 
-import "github.com/georghagn/gsf-go/pkg/gsflog"
+```bash
+go get github.com/georghagn/gsf-go/pkg/gsflog
+````
+---
 
-func main() {
-    // 1. Einfacher Konsolen-Logger (mit Farben)
-    log := gsflog.NewConsole(gsflog.LevelDebug)
+### `gsflog` bietet:
 
-    // 2. Kontext hinzufügen
-    reqLog := log.With("request_id", "req-123")
+- Loglevel (`Debug`, `Info`, `Warn`, `Error`)
+- strukturierte Felder (`With(key, value)`)
+- austauschbare Ausgabe über `io.Writer`
 
-    reqLog.Info("Server gestartet")
-    reqLog.Warn("Speicher wird knapp")
-}
-```
+Es versucht bewusst **nicht** mit vollwertigen Logging-Frameworks wie `slog`, `zap` oder `zerolog` zu konkurrieren.
 
-## Strategien für Datei-Logs & Rotation
+---
 
-`gsflog` bietet zwei Wege, um Log-Dateien zu verwalten. Wähle den, der zu deiner Infrastruktur passt.
+### Designziele
 
-### A. Interne Rotation (Empfohlen / Standalone)
+- Kleine, überschaubare API
+- Kein globaler Zustand
+- Keine versteckten Hintergrund-Goroutinen
+- Ausgabe über Standard-Interfaces (`io.Writer`)
+- Einfache Integration mit externen Modulen
 
-Der Logger kümmert sich selbstständig um die Rotation. Du musst keine externen Tools konfigurieren.
-Hierbei nutzen wir das `pkg/rotate` Paket als Backend.
+---
 
-**Vorteil:** "Set and Forget". Funktioniert überall (Docker, Bare Metal, Windows/Linux).
+### Nicht-Ziele
 
-```go
-import (
-    "github.com/georghagn/gsf-go/pkg/gsflog"
-    "github.com/georghang/gsf-go/pkg/rotate"
-)
+`gsflog` stellt bewusst **keine** Funktionen bereit für:
 
-func main() {
-    // Der Rotator verwaltet die Datei-Größe
-    rotator := rotate.New("app.log", 
-        &rotate.SizePolicy{MaxBytes: 10*1024*1024}, // 10 MB
-        &rotate.GzipCompression{}, 
-        nil,
-    )
-    defer rotator.Close()
+- Logrotation
+- Retention oder Archivierung
+- Asynchrones Logging
+- Verteiltes Logging
+- Anbindung an spezielle Log-Backends
 
-    // Der Logger schreibt einfach in den Rotator
-    log := gsflog.NewJSON(rotator, gsflog.LevelInfo)
-    
-    log.Info("Dies landet in einer rotierenden Datei")
-}
-```
+Diese Aufgaben werden an externe Module delegiert.
 
-### B. Externe Rotation (Linux Way / Scheduler)
+---
 
-Der Logger schreibt in eine Datei, aber ein **externer Prozess** (z.B. `logrotate`, ein Kubernetes Sidecar oder der GSF Scheduler) verschiebt die Datei. Der Logger muss danach angewiesen werden, die Datei neu zu öffnen.
+### Ausgabemodell
 
-**Vorteil:** Integration in System-Tools oder zeitgesteuerte Rotation (Cron).
+`gsflog` schreibt Logeinträge auf ein `io.Writer`.
 
-```go
-import (
-    "github.com/georghagn/gsf-go/pkg/gsflog"
-    "github.com/georghagn/gsf-go/pkg/schedule"
-)
+Dadurch kann der Logger unter anderem mit folgenden Zielen verwendet werden:
 
-func main() {
-    // 1. Nutze den ReopenableWriter
-    writer, _ := gsflog.NewReopenableWriter("app.log")
-    defer writer.Close()
+- `Stdout` / `Stderr`
+- Dateien
+- rotierenden Writer-Implementierungen
+- eigenen Writer-Typen
 
-    log := gsflog.NewJSON(writer, gsflog.LevelInfo)
+Die Verantwortung für Dateihandling und Synchronisation liegt beim Writer.
 
-    // 2. Ein externer Trigger (hier simuliert durch Scheduler) rotiert
-    sched := schedule.New()
-    sched.Every(24*time.Hour, func() {
-        // A. Datei umbenennen (Simulation von logrotate)
-        os.Rename("app.log", "app.log.bak")
-        
-        // B. WICHTIG: Dem Logger sagen, er soll neu öffnen
-        writer.Reopen() 
-    })
-}
-```
+---
 
-## Formatierung
+### Reopenable Writer
 
-### JSON (Production)
+Für externe Rotationsstrategien stellt `gsflog` einen `ReopenableWriter` bereit.
 
-Ideal für Log-Aggregatoren.
+Dieser erlaubt es, Logdateien zur Laufzeit zu schließen und erneut zu öffnen,
+beispielsweise nachdem sie von außen verschoben oder rotiert wurden.
 
-```go
-log := gsflog.NewJSON(os.Stdout, gsflog.LevelInfo)
-log.With("id", 1).Error("Fail")
-// Output: {"level":"ERROR","msg":"Fail","id":1,"time":"2023-..."}
-```
+Typische use cases:
 
-### Text / Konsole (Development)
+- Time-based Rotation via Scheduler
+- Externe Rools (z.B.: logrotate-style workflows)
 
-Menschenlesbar, sortierte Felder, optionale ANSI-Farben.
+---
 
-```go
-log := gsflog.NewConsole(gsflog.LevelDebug)
-log.With("id", 1).Error("Fail")
-// Output: 2023/... [ERROR] Fail id=1 (in Rot)
-```
+### Beispiele
 
-## API Referenz
+Lauffähiges Beispiele befindet sich unter:
 
-### Logger erstellen
+- `cmd/rotate-example1/main.go` – Logging mit Rotation
+- `cmd/rotate-example2/main.go` – Logging mit Rotation
+- `cmd/gsflog-example/main.go` – Individuelle Konfiguration
 
-  * `New(out io.Writer, level Level, fmt Formatter)`: Der generische Konstruktor.
-  * `NewConsole(level Level)`: Shortcut für Stdout + TextFormatter + Farben.
-  * `NewJSON(out io.Writer, level Level)`: Shortcut für JSONFormatter.
+Die Beispiele sind bewusst einfach gehalten und zeigen explizite Verdrahtung.
 
-### Kontext (Fluent Interface)
+---
 
-  * `With(key string, value interface{}) *Logger`: Erstellt eine **Kopie** des Loggers mit dem neuen Feld. Der ursprüngliche Logger bleibt unverändert (Immutability).
+### Fehlerbehandlung
 
-### Writer
+`gsflog` folgt einer klaren Regel:
 
-  * `NewReopenableWriter(path string)`: Erstellt einen Writer, der `Reopen()` unterstützt. Thread-safe.
+> Fehler werden zurückgegeben, nicht geloggt.
+
+Die Behandlung von Fehlern erfolgt auf Anwendungsebene.
+
+---
+
+## License / Kontakt
+
+LICENSE, CONTRIBUTE.md, SECURITY.md und Kontaktinformationen findest du im Root der Suite
+
+

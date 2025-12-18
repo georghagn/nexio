@@ -8,16 +8,16 @@ import (
 	"sync"
 )
 
-// ReopenableWriter ist ein io.WriteCloser, der zur Laufzeit neu geöffnet werden kann.
-// Das ist nützlich für logrotate-Strategien (z.B. via Scheduler oder SIGHUP),
-// bei denen die Datei extern verschoben wird und der Prozess das Filehandle erneuern muss.
+// ReopenableWriter is an io.WriteCloser that can be reopened at runtime.
+// This is useful for logrotate strategies (e.g., via scheduler or SIGHUP),
+// where the file is moved externally and the process needs to renew the file handle.
 type ReopenableWriter struct {
 	filename string
 	file     *os.File
 	mu       sync.Mutex
 }
 
-// NewReopenableWriter öffnet die Datei und bereitet das Schreiben vor.
+// NewReopenableWriter opens the file and prepares the writing.
 func NewReopenableWriter(filename string) (*ReopenableWriter, error) {
 	w := &ReopenableWriter{filename: filename}
 	if err := w.Reopen(); err != nil {
@@ -26,41 +26,47 @@ func NewReopenableWriter(filename string) (*ReopenableWriter, error) {
 	return w, nil
 }
 
-// Write implementiert io.Writer. Es ist thread-safe.
+// Write implements an io.Writer. It is thread-safe.
 func (w *ReopenableWriter) Write(p []byte) (n int, err error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
 	if w.file == nil {
-		// Fallback: Versuchen neu zu öffnen, falls geschlossen war
+		// Fallback: Try reopening if it was closed.
 		if err := w.reopenInternal(); err != nil {
 			return 0, err
 		}
 	}
-	return w.file.Write(p)
+	if n, err := w.file.Write(p); err != nil {
+		return 0, err
+	} else {
+		if err := w.Reopen(); err != nil {
+			return 0, err
+		}
+		return n, nil
+	}
 }
 
-// Close implementiert io.Closer.
+// Close implements an io.Closer.
 func (w *ReopenableWriter) Close() error {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	return w.closeInternal()
 }
 
-// Reopen schließt die aktuelle Datei und öffnet sie unter dem gleichen Pfad neu.
+// Reopen closes the current file and reopens it under the same path.
 func (w *ReopenableWriter) Reopen() error {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
-	// 1. Erst schließen (Flush)
+	// 1. Close first (Flush)
 	_ = w.closeInternal()
 
-	// 2. Neu öffnen
+	// 2. New opening
 	return w.reopenInternal()
 }
 
-// --- Interne Helper (ohne Lock, da vom Caller gelockt) ---
-
+// --- Interne Helper (Without a lock, as it's locked by the caller.) ---
 func (w *ReopenableWriter) reopenInternal() error {
 	f, err := os.OpenFile(w.filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {

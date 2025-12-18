@@ -15,20 +15,20 @@ import (
 	"time"
 )
 
-// RotationPolicy entscheidet, WANN rotiert wird.
+// RotationPolicy decides WHEN rotation occurs.
 type RotationPolicy interface {
 
-	// ShouldRotate prüft anhand der aktuellen Größe und Öffnungszeit, ob rotiert werden muss.
+	// ShouldRotate checks whether rotation is necessary based on the current size and opening time.
 	ShouldRotate(currentSize int64, openTime time.Duration) bool
 }
 
-// ArchiveStrategy entscheidet, WIE das alte File behandelt wird (z.B. Zippen).
-// Sie nimmt den alten Pfad, verarbeitet ihn und gibt den neuen Pfad zurück.
+// ArchiveStrategy decides HOW the old file is handled (e.g., zipped).
+// It takes the old path, processes it, and returns the new path.
 type ArchiveStrategy interface {
 	Archive(filePath string) (string, error)
 }
 
-// RetentionPolicy entscheidet, WELCHE alten Dateien gelöscht werden (Aufräumen).
+// RetentionPolicy decides WHICH old files are deleted (cleanup).
 type RetentionPolicy interface {
 	Prune(baseFilename string) error
 }
@@ -36,7 +36,7 @@ type RetentionPolicy interface {
 // Archive Strategies //
 //--------------------//
 
-// NoCompression: Einfaches Umbenennen (log.1, log.2 oder timestamp)
+// NoCompression: Simple rename (log.1, log.2 or timestamp)
 type NoCompression struct{}
 
 func (s *NoCompression) Archive(path string) (string, error) {
@@ -51,7 +51,7 @@ func (s *NoCompression) Archive(path string) (string, error) {
 	return newName, err
 }
 
-// GzipCompression: Zippen des Logs
+// GzipCompression: Zip Logs
 type GzipCompression struct{}
 
 func (s *GzipCompression) Archive(path string) (string, error) {
@@ -59,14 +59,14 @@ func (s *GzipCompression) Archive(path string) (string, error) {
 	timestamp := time.Now().Format("20060102-150405.000")
 	gzName := fmt.Sprintf("%s-%s.gz", path, timestamp)
 
-	// 1. Input Datei öffnen
+	// 1. Open input file
 	inFile, err := os.Open(path)
 	if err != nil {
 		return "", err
 	}
 	defer inFile.Close()
 
-	// 2. Output Datei (.gz) erstellen
+	// 2. create output file (.gz)
 	outFile, err := os.Create(gzName)
 	if err != nil {
 		return "", err
@@ -77,16 +77,17 @@ func (s *GzipCompression) Archive(path string) (string, error) {
 	gw := gzip.NewWriter(outFile)
 	defer gw.Close()
 
-	// 4. Kopieren
+	// 4. Copy
 	if _, err := io.Copy(gw, inFile); err != nil {
 		return "", err
 	}
 
-	// Wichtig: Explizit schließen, damit Gzip Footer geschrieben wird
+	// Important: Explicitly close the browser so that the Gzip footer is written.
 	gw.Close()
 	inFile.Close()
 
-	// 5. Originaldatei löschen (da jetzt gezippt)
+	// 5. Important: Explicitly delete the original file (since it's now zipped)
+	// so that a Gzip footer is written.
 	os.Remove(path)
 
 	return gzName, nil
@@ -95,12 +96,12 @@ func (s *GzipCompression) Archive(path string) (string, error) {
 // Retentaion Policies  //
 // ---------------------//
 
-// SizePolicy: Rotiert bei Größe X
+// SizePolicy: Rotates at size X
 type SizePolicy struct {
 	MaxBytes int64
 }
 
-// DailyPolicy: Rotiert alle 24h (stark vereinfacht für Tiny-Zwecke)
+// DailyPolicy: Rotates every 24 hours (greatly simplified for Tiny purposes)
 type DailyPolicy struct{}
 
 func (p *SizePolicy) ShouldRotate(currentSize int64, openDuration time.Duration) bool {
@@ -114,12 +115,12 @@ func (p *DailyPolicy) ShouldRotate(size int64, openDuration time.Duration) bool 
 // Rotation Policies //
 //-------------------//
 
-// KeepAll: Behält alles (Default)
+// KeepAll: keep everything (Default)
 type KeepAll struct{}
 
 func (k *KeepAll) Prune(base string) error { return nil }
 
-// MaxFiles: Behält nur die neuesten N Dateien
+// MaxFiles: Keep only newest N files
 type MaxFiles struct {
 	MaxBackups int
 }
@@ -128,15 +129,15 @@ func (m *MaxFiles) Prune(baseFilename string) error {
 
 	dir := filepath.Dir(baseFilename)
 	baseName := filepath.Base(baseFilename)
-	prefix := strings.TrimSuffix(baseName, filepath.Ext(baseName)) // z.B. "app" von "app.log"
+	prefix := strings.TrimSuffix(baseName, filepath.Ext(baseName)) // z.B. "app" of "app.log"
 
-	// 1. Alle Dateien im Ordner lesen
+	// 1. Read all files in the folder
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		return err
 	}
 
-	// 2. Filtern: Nur unsere Logfiles (die mit dem Prefix anfangen und NICHT das aktuelle sind)
+	// 2. Filter: Only our log files (those that start with the prefix and are NOT the current one)
 	var backups []fs.DirEntry
 	for _, e := range entries {
 		if e.IsDir() {
@@ -144,26 +145,26 @@ func (m *MaxFiles) Prune(baseFilename string) error {
 		}
 		if e.Name() == baseName {
 			continue
-		} // Das aktuelle aktive Log überspringen
+		} // Skip the current active log
 		if strings.HasPrefix(e.Name(), prefix) {
 			backups = append(backups, e)
 		}
 	}
 
-	// 3. Wenn weniger als Limit -> Fertig
+	// 3. If less than the limit -> Done
 	if len(backups) <= m.MaxBackups {
 		return nil
 	}
 
-	// 4. Sortieren nach Mod-Time (Älteste zuerst)
-	// Da Namen Zeitstempel enthalten, reicht oft Namenssortierung, aber ModTime ist sicherer
+	// 4. Sort by Mod-Time (Oldest First)
+	//    Since names contain timestamps, sorting by name is often sufficient, but Mod-Time is safer.
 	sort.Slice(backups, func(i, j int) bool {
 		infoI, _ := backups[i].Info()
 		infoJ, _ := backups[j].Info()
 		return infoI.ModTime().Before(infoJ.ModTime())
 	})
 
-	// 5. Löschen (Die Ältesten, bis wir wieder im Limit sind)
+	// 5. Delete (The oldest ones, until we're back within the limit)
 	toDelete := len(backups) - m.MaxBackups
 	for i := 0; i < toDelete; i++ {
 		fullPath := filepath.Join(dir, backups[i].Name())
