@@ -5,9 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/georghagn/gsf-go/pkg/gsflog"
-	"github.com/georghagn/gsf-go/pkg/gsflogrotate"
-	"github.com/georghagn/gsf-go/pkg/rotate"
+	"github.com/georghagn/gsf-suite/pkg/gsflog"
+	"github.com/georghagn/gsf-suite/pkg/rotate"
 )
 
 func TestLoggerWithRotatorIntegration(t *testing.T) {
@@ -37,7 +36,6 @@ func TestLoggerWithRotatorIntegration(t *testing.T) {
 	)
 
 	// Integration (EXPLICIT!)
-	gsflogrotate.Wire(logger, writer)
 
 	// --- Act ------------------------------------------------------
 
@@ -71,7 +69,6 @@ func TestMultiLoggerWithRotatorIntegration(t *testing.T) {
 	// File logger
 	rot := rotate.New(tmpFile.Name(), nil, nil, nil)
 	fileLogger := gsflog.NewSink(rot, gsflog.LevelDebug, nil)
-	gsflogrotate.Wire(fileLogger, rot)
 
 	// Console logger (discard output)
 	consoleLogger := gsflog.NewSink(io.Discard, gsflog.LevelDebug, nil)

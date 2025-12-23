@@ -1,0 +1,9 @@
+server:
+  port: ":9090"  # Ändern wir mal zum Spaß, um zu sehen ob es klappt
+
+log:
+  level: "debug" # Wichtig fürs Entwickeln
+
+auth:
+  secret: "default-secret"
+

@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	reopen "github.com/georghagn/gsf-suite/pkg/gsflog/writer/reopen"
 )
 
 func TestReopenableWriter(t *testing.T) {
@@ -12,7 +14,7 @@ func TestReopenableWriter(t *testing.T) {
 	logPath := filepath.Join(dir, "service.log")
 
 	// 1. Start Writer
-	w, err := NewReopenableWriter(logPath)
+	w, err := reopen.NewReopenableWriter(logPath)
 	if err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}

@@ -6,7 +6,7 @@
 
 ## Supported Versions
 
-GSF (Go Simple Services) is currently in **early public development**.
+GSF (Go Small Services) is currently in **early public development**.
 
 * Versions **before v1.0.0** are provided on a best-effort basis
 * Security fixes may be released without maintaining backward compatibility

@@ -1,17 +1,17 @@
 
-|<sub>🇬🇧 [English translation →](README.en.md)</sub>|
+|<sub>🇬🇧 [English translation →](README.md)</sub>|
 |----:|
 |    |
 
 ||[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE) [![Dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)](#)|
 |----|----|
-|![GSF-Suite-Logo](logo-suite.png)| ***GSF-Suite***<br>Die GSF - Suite ist eine Sammlung kleiner, unabhängiger Go-Module zum Bau **einfacher Services**. Teil der **Go Simple Frameworks Suite**|
+|![GSF-Suite-Logo](logo-suite.png)| ***GSF-Suite***<br>Die GSF - Suite ist eine Sammlung kleiner, unabhängiger Go-Module zum Bau **einfacher Services**. Teil der **Go Small Frameworks Suite**|
 
-<sup>***GSF*** steht für ***Go Simple Frameworks*** — eine Sammlung von minimalistischen Tools für robuste Anwendungen.</sup>
+<sup>***GSF*** steht für ***Go Small Frameworks*** — eine Sammlung von minimalistischen Tools für robuste Anwendungen.</sup>
 
 ### Überblick
 
-GSF (Go Simple Frameworks) ist eine Sammlung kleiner, unabhängiger Go-Module zum Bau **einfacher Services**.
+GSF (Go Small Frameworks) ist eine Sammlung kleiner, unabhängiger Go-Module zum Bau **einfacher Services**.
 
 Der Fokus liegt auf **Klarheit, wenigen Abhängigkeiten und expliziter Zusammensetzung**, nach dem Prinzip einer pragmatischen *90%-Lösung*.
 

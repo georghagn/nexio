@@ -1,5 +1,7 @@
 
-<sub>🇬🇧 [English translation →](README.en.md)</sub>
+<sub>🇬🇧 [English translation →](README.md)</sub>
+
+---
 
 ## Überblick
 
@@ -156,6 +158,7 @@ Ein lauffähiges Beispiel befindet sich unter `cmd/schedule-example/main.go`.
   * **Nicht Persistent:** Es gibt keine eingebaute Datenbank. Für kritische Jobs, die einen Neustart überleben müssen, sollte eine externe Queue oder DB genutzt werden.
   * **Kein "Distributed Lock":** Wenn du deine App 10x skalierst (z.B. in Kubernetes), läuft der Scheduler 10x.
 
+---
 
 ## License / Kontakt
 

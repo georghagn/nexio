@@ -1,12 +1,12 @@
 
-<sub>🇬🇧 [English translation →](SECURITY.en.md)</sub>
+<sub>🇬🇧 [English translation →](SECURITY.md)</sub>
 
 
 # Sicherheitsrichtlinie (Security Policy)
 
 ## Unterstützte Versionen
 
-GSF (Go Simple Services) befindet sich derzeit in einer **frühen öffentlichen Entwicklungsphase**.
+GSF (Go Small Services) befindet sich derzeit in einer **frühen öffentlichen Entwicklungsphase**.
 
 * Versionen **vor v1.0.0** werden nach dem *Best-Effort-Prinzip* bereitgestellt.
 * Sicherheitsfixes können erfolgen, ohne vollständige Abwärtskompatibilität zu garantieren.

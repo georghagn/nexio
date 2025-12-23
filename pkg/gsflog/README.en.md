@@ -1,5 +1,7 @@
 <sub>🇩🇪 [German translation →](README.de.md)</sub>
 
+---
+
 ### Overview
 
 The **GSF-Suite/Logger** is a structured, modular, composable logger for Go, developed according to the "Tiny Frameworks" philosophy. It strictly separates data acquisition (`Logger`), formatting (`Formatter`), and output (`io.Writer`).

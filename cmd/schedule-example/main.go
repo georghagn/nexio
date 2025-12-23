@@ -46,3 +46,46 @@ func main() {
 
 	fmt.Println("Scheduler stopped cleanly.")
 }
+
+/*
+func logWithScheduler() {
+	sched := schedule.New()
+
+	writer, _ := gsflog.NewReopenableWriter("app.log")
+	log.SetOutput(writer)
+
+	// Reopen jede Nacht um 00:00
+	sched.At(nextMidnight(), func() {
+		_ = writer.Reopen()
+	})
+
+	// oder periodisch
+	sched.Every(24*time.Hour, func() {
+		_ = writer.Reopen()
+	})
+
+}
+
+func setupLogger() {
+	// 1. Setup Rotator
+	logFile := "gsflog-example-main.log"
+	rotator := rotate.New(logFile, nil, nil, nil)
+	defer rotator.Close()
+
+	// 2. Setup Console Logger (Bunt, Text)
+	colouredTextFormatter := &gsflog.TextFormatter{UseColors: true}
+	consoleLoggerSink := gsflog.NewConsoleSink(gsflog.LevelDebug, colouredTextFormatter)
+
+	// 3. Setup Console FileLogger (Json)
+	jsonFormatter := &gsflog.JSONFormatter{}
+	fileLoggerSink := gsflog.NewFileSink(rotator, gsflog.LevelInfo, jsonFormatter)
+
+	// 4. Build Logger
+	// we don't use the Convenience Method: mainLogger := NewDefault(logFile)
+	// instead we use the hardcore way :-) Different LogLevels! for console and file
+	mainLogger := gsflog.New()
+	mainLogger.AddNamed("Console", consoleLoggerSink)
+	mainLogger.AddNamed("File", fileLoggerSink)
+
+}
+*/

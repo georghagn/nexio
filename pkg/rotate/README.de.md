@@ -1,5 +1,7 @@
 
-<sub>🇬🇧 [English translation →](README.en.md)</sub>
+<sub>🇬🇧 [English translation →](README.md)</sub>
+
+---
 
 ## Überblick
 
@@ -111,10 +113,11 @@ Typische Integrationen:
 
 Ein lauffähiges Beispiel befindet sich unter `cmd/rotate-example/main.go`.
 
+---
 
 ## License / Kontakt
 
-License, CONTRIBUTE.md, SECURITY.md und Kontaktinformationen findest du im Root der Suite
+LICENSE, CONTRIBUTE.md, SECURITY.md und Kontaktinformationen findest du im Root der Suite
 
 
 

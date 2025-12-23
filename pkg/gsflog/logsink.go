@@ -1,4 +1,3 @@
-// pkg/gsflog/loggeriface.go
 package gsflog
 
 type LogSink interface {

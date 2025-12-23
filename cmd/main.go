@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/georghagn/gsf-go/pkg/gsflog"
-	"github.com/georghagn/gsf-go/pkg/gsflogrotate"
 	"github.com/georghagn/gsf-go/pkg/rotate"
 	"github.com/georghagn/gsf-go/pkg/schedule"
 )
@@ -23,7 +22,7 @@ func main() {
 
 	// Create a basic logger writing to an io.Writer
 	// (the writer will be provided by the rotator below)
-	
+
 	// --- Rotator -----------------------------------------------------------
 
 	rotator := rotate.New(

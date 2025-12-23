@@ -1,5 +1,5 @@
 
-<sub>🇬🇧 [English translation →](CONTRIBUTING.en.md)</sub>
+<sub>🇬🇧 [English translation →](CONTRIBUTING.md)</sub>
 
 
 # Beitragen zur GSF Suite

@@ -1,5 +1,0 @@
-{"level":"INFO ","msg":"Processing Request...","req_id":"req-abc-123","time":"2025-12-18T18:14:21+01:00"}
-{"level":"INFO ","msg":"Processing Request...","req_id":"req-abc-123","time":"2025-12-18T18:14:21+01:00","user_id":42}
-{"level":"WARN ","msg":"Use has no credit","time":"2025-12-18T18:14:21+01:00","user_id":42}
-{"level":"INFO ","msg":"Stop Processing...","time":"2025-12-18T18:14:21+01:00","user_id":42}
-{"level":"ERROR","msg":"Transaction failed","time":"2025-12-18T18:14:21+01:00"}
