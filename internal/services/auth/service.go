@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"sync"
 
-	// Dein Framework importieren
+	// Framework importieren
 	"github.com/georghagn/gsf-suite/pkg/nexproto"
 	"github.com/georghagn/gsf-suite/pkg/nexserver"
 )
@@ -58,6 +58,7 @@ func handleLogin(ctx context.Context, s *nexIOserver.Session, params json.RawMes
 		tokenMu.Unlock()
 
 		s.IsAuth = true
+		s.BindUser(p.Username)
 		s.Store["user"] = p.Username
 
 		return map[string]string{"status": "Login OK", "token": token}, nil

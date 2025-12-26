@@ -75,7 +75,6 @@ func (s *Session) writePump() {
 			// Optimierung: Alle wartenden Nachrichten im Channel direkt mitsenden
 			n := len(s.send)
 			for i := 0; i < n; i++ {
-				w.Write([]byte{'\n'})
 				w.Write(<-s.send)
 			}
 
@@ -208,6 +207,11 @@ func (s *Session) GetUser() interface{} {
 		return u
 	}
 	return nil
+}
+
+// BindUser ist ein Wrapper, damit externe Services den User binden können
+func (s *Session) BindUser(userID string) {
+	s.server.BindUser(s, userID)
 }
 
 // Helper: Typsicherer Zugriff (erfordert, dass du das User-Struct kennst)

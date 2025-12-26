@@ -2,9 +2,12 @@ package main
 
 import (
 	"context"
-	"log"
-	"time"
+	"encoding/json"
+	"fmt"
+	"os"
 
+	"github.com/georghagn/gsf-suite/pkg/gsfconfig"
+	"github.com/georghagn/gsf-suite/pkg/gsflog"
 	"github.com/georghagn/gsf-suite/pkg/nexclient"
 )
 
@@ -15,60 +18,79 @@ type LoginResult struct {
 }
 
 func main() {
-	// 1. Verbindung herstellen
-	client, err := nexclient.Dial("ws://localhost:9090/ws")
+
+	// Config aus YAML laden
+	cfg, err := gsfconfig.Load()
 	if err != nil {
-		log.Fatal("Konnte Printer nicht verbinden:", err)
-	}
-	defer client.Close()
-
-	log.Println("Printer Service verbunden.")
-
-	// 2. Login durchführen (Synchron!)
-	// Wir geben dem Login max 5 Sekunden
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	params := map[string]string{
-		"username": "admin",
-		"password": "default-secret",
+		fmt.Println("Fehler beim Laden der Config: %v", err)
+		os.Exit(1)
 	}
 
-	var loginRes LoginResult
-
-	log.Println("Versuche Login...")
-	// HIER PASSIERT DIE MAGIE:
-	if err := client.Call(ctx, "auth.login", params, &loginRes); err != nil {
-		log.Fatalf("Login fehlgeschlagen: %v", err)
+	// Brücke bauen: gsfconfig -> nexIOclient.ProtocolSettings
+	defaultLogger := nexIOclient.LogOptions{
+		LogFile:   cfg.Client.Log.LogFile,
+		LogLevel:  cfg.Client.Log.Level,
+		LogFormat: cfg.Client.Log.Format,
 	}
 
-	log.Printf("Login erfolgreich! Token: %s", loginRes.Token)
+	defaultAuth := nexIOclient.AuthOptions{
+		User:   cfg.Client.Auth.User,
+		Secret: cfg.Client.Auth.Secret,
+	}
 
-	// 3. Service Loop
-	// Hier würde der Printer jetzt einfach warten oder ab und zu seinen Status senden
-	for {
-		time.Sleep(10 * time.Second)
-		// Ping / KeepAlive Logik oder Status Update senden...
-		// client.Call(context.Background(), "printer.status", "idle", nil)
-		log.Println("Printer wartet auf Aufträge...")
+	clientSettings := nexIOclient.ClientSettings{
+		Url:          cfg.Client.Url,
+		PongWait:     cfg.Client.PongWait,
+		MaxBackoff:   cfg.Client.MaxBackoff,
+		WriteTimeout: cfg.Client.WriteDeadline,
+		CtxTimeout:   cfg.Client.CtxTimeout,
+		Logger:       defaultLogger,
+		Auth:         defaultAuth,
+	}
 
-		// Service Loop (Schlauer gemacht)
-		ticker := time.NewTicker(10 * time.Second)
-		defer ticker.Stop()
+	logger := gsflog.NewDefault(&clientSettings.Logger.LogFile)
 
-		for {
-			select {
-			case <-ticker.C:
-				// Alle 10 Sekunden:
-				log.Println("Printer wartet auf Aufträge...")
-				// Optional: Ping senden um sicherzugehen
-				client.Call(ctx, "printer.ping", nil, nil)
+	// Client erstellen mit dem Bulk-Update
+	client := nexIOclient.New(
+		logger.With("component", "printer-service"),
+		nexIOclient.WithClientSettings(clientSettings),
+	)
 
-			case <-client.Done():
-				// HIER merken wir den Tod des readLoops!
-				log.Println("Service beendet: Verbindung zum Server verloren.")
-				return // Beendet das Programm
-			}
+	// 2. Business-Logik registrieren (Callbacks)
+	// Diese bleiben über alle Reconnects hinweg aktiv!
+	client.OnNotification = func(method string, params json.RawMessage) {
+		if method == "printer.print" {
+			logger.With("params", string(params)).Info("!!! DRUCKAUFTRAG ERHALTEN")
 		}
 	}
+
+	client.OnStatusChange = func(connected bool) {
+		if connected {
+			logger.Info("Online: Drucker ist bereit.")
+		} else {
+			logger.Info("Offline: Warte auf Wiederverbindung...")
+		}
+	}
+
+	// 3. Authentifizierungs-Daten vorbereiten
+	// Das wird bei jedem (Wieder-)Verbinden automatisch mitgeschickt
+	/*
+		authParams := map[string]string{
+			"username": "admin",
+			"password": "default-secret",
+		}
+	*/
+	authParams := map[string]string{
+		"username": client.Options.Auth.User,
+		"password": client.Options.Auth.Secret,
+	}
+
+	// 4. Den Client starten
+	// Run blockiert, solange der Kontext aktiv ist.
+	logger.Info("Printer Service startet...")
+	ctx := context.Background()
+
+	// Hier gibst du URL und Auth mit. Den Rest erledigt die Library.
+	client.Run(ctx, authParams)
+
 }

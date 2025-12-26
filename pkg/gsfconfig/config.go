@@ -2,48 +2,80 @@ package gsfconfig
 
 import (
 	"strings"
+	"time"
 
 	"github.com/spf13/viper"
 )
 
 // Config bildet die Struktur unserer config.yaml ab
-type Config struct {
-	Server ServerConfig `mapstructure:"server"`
-	Log    LogConfig    `mapstructure:"log"`
-	Auth   AuthConfig   `mapstructure:"auth"`
+
+// ProtocolConfig enthält alle technischen WebSocket-Parameter
+type ProtocolConfig struct {
+	PongWait     time.Duration `mapstructure:"pong_wait"`
+	PingPeriod   time.Duration `mapstructure:"ping_period"`
+	MaxBackoff   time.Duration `mapstructure:"max_backoff"`
+	WriteTimeout time.Duration `mapstructure:"write_timeout"`
 }
 
 type ServerConfig struct {
-	Port string `mapstructure:"port"`
-	Host string `mapstructure:"host"`
+	Port            string        `mapstructure:"port"`
+	WriteTimeout    time.Duration `mapstructure:"write_timeout"`
+	ReadTimeout     time.Duration `mapstructure:"read_timeout"`
+	IdleTimeout     time.Duration `mapstructure:"idle_timeout"`
+	ShutdownDelay   time.Duration `mapstructure:"shutdown_delay"`
+	ReadbufferSize  int           `mapstructure:"readbuffer_size"`
+	WritebufferSize int           `mapstructure:"writebuffer_size"`
+	Log             LogConfig     `mapstructure:"log"`
+	Auth            AuthConfig    `mapstructure:"auth"`
+	// URL  string `mapstructure:"url"` // Wichtig für den Client (z.B. ws://localhost:8080/ws)
 }
 
-type LogConfig struct {
-	Level  string `mapstructure:"level"`  // z.B. "debug", "info"
-	Format string `mapstructure:"format"` // z.B. "json", "text"
+type ClientConfig struct {
+	Url            string        `mapstructure:"url"`
+	PongWait       time.Duration `mapstructure:"pong_wait"`
+	WriteDeadline  time.Duration `mapstructure:"write_deadline"`
+	MaxMessageSize time.Duration `mapstructure:"max_messagesize"`
+	MaxBackoff     time.Duration `mapstructure:"max_backoff"`
+	CtxTimeout     time.Duration `mapstructure:"ctx_timeout"`
+	Log            LogConfig     `mapstructure:"log"`
+	Auth           AuthConfig    `mapstructure:"auth"`
 }
 
+// AuthConfig hält die Sicherheits-Parameter
 type AuthConfig struct {
-	Secret string `mapstructure:"secret"` // Für Token Generierung
+	User   string `mapstructure:"user"`
+	Secret string `mapstructure:"secret"`
+}
+
+// LogConfig hält die Logger-Parameter
+type LogConfig struct {
+	Level   string `mapstructure:"level"`  // z.B. "debug", "info"
+	Format  string `mapstructure:"format"` // z.B. "json", "text"
+	LogFile string `mapstructure:"log_file"`
+}
+
+// Config ist das Haupt-Struct, das alles bündelt
+type Config struct {
+	Server   ServerConfig   `mapstructure:"server"`
+	Client   ClientConfig   `mapstructure:"client"`
+	Protocol ProtocolConfig `mapstructure:"protocol"`
+	Auth     AuthConfig     `mapstructure:"auth"`
+	Log      LogConfig      `mapstructure:"log"`
 }
 
 // Load liest die Config aus Dateien und Environment-Variablen
 func Load() (*Config, error) {
 	v := viper.New()
 
-	// 1. Defaults setzen (Falls keine Config-Datei da ist)
-	v.SetDefault("server.port", ":8080")
-	v.SetDefault("server.host", "localhost")
-	v.SetDefault("log.level", "info")
-	v.SetDefault("auth.secret", "change-me-in-prod")
+	// 1. No Defaults-Setting: we initialize default in Module-Options
 
-	// 2. Config-Datei suchen
+	// 2A. Config-Datei suchen
 	v.SetConfigName("config")   // Name der Datei (ohne Endung)
 	v.SetConfigType("yaml")     // Endung (yaml, json, toml...)
 	v.AddConfigPath(".")        // Suche im aktuellen Ordner
 	v.AddConfigPath("./config") // Suche im Unterordner config/
 
-	// B. Für Entwicklung (wenn man "go run" aus cmd/server startet)
+	// 2B. Für Entwicklung (wenn man "go run" aus cmd/server startet)
 	// Wir suchen 2 Ebenen höher im Project Root
 	v.AddConfigPath("../..")
 
@@ -68,5 +100,11 @@ func Load() (*Config, error) {
 		return nil, err
 	}
 
+	/*
+		// Abgeleitete Defaults (Ping sollte immer etwas kürzer als Pong sein)
+		if c.Protocol.PingPeriod == 0 {
+			c.Protocol.PingPeriod = (c.Protocol.PongWait * 9) / 10
+		}
+	*/
 	return &c, nil
 }

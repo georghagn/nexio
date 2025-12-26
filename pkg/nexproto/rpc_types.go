@@ -29,9 +29,9 @@ type RPCError struct {
 
 // RPCNotification: Structure for Server-to-Client Messages (Broadcasts)
 type RPCNotification struct {
-	JSONRPC string      `json:"jsonrpc"`
-	Method  string      `json:"method"`
-	Params  interface{} `json:"params,omitempty"` // interface{}, so you can throw in maps or structs
+	JSONRPC string          `json:"jsonrpc"`
+	Method  string          `json:"method"`
+	Params  json.RawMessage `json:"params,omitempty"`
 }
 
 // --- Standard JSON-RPC 2.0 Error Codes ---
@@ -73,6 +73,3 @@ func NewRPCError(code int, data interface{}) *RPCError {
 		Data:    data,
 	}
 }
-
-// HandlerFunc: This is how your functions should look
-//type RPCHandlerFunc func(ctx context.Context, s *Session, params json.RawMessage) (interface{}, *RPCError)

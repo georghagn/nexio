@@ -1,15 +1,15 @@
-package nexclient
+package nexIOclient
 
 import (
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"sync"
 	"sync/atomic"
 	"time"
 
+	"github.com/georghagn/gsf-suite/pkg/gsflog"
 	"github.com/georghagn/gsf-suite/pkg/nexproto"
 	"github.com/gorilla/websocket"
 )
@@ -17,63 +17,161 @@ import (
 // Client repräsentiert eine Verbindung zum GSF Server
 type Client struct {
 	conn *websocket.Conn
+	//url  string      // Damit wir wissen, wohin wir uns wiederverbinden
+	auth interface{} // Damit wir uns automatisch neu einloggen können
 
-	// Atomic Counter für eindeutige Request IDs
-	seq uint64
-
-	// Hier warten wir auf Antworten: Map[ID] -> Antwort-Kanal
-	pending   map[string]chan *nexIOproto.RPCResponse
+	seq       uint64                                  // Atomic Counter für eindeutige Request IDs
+	pending   map[string]chan *nexIOproto.RPCResponse // Hier warten wir auf Antworten: Map[ID] -> Antwort-Kanal
 	pendingMu sync.Mutex
 
-	// Optional: Callback für Broadcasts/Notifications
-	OnNotification func(method string, params json.RawMessage)
+	OnNotification func(method string, params json.RawMessage) // Optional: Callback für Broadcasts/Notifications
+	OnStatusChange func(connected bool)
 
-	// Zum Beenden
-	closeOnce sync.Once
+	Log     gsflog.LogSink
+	Options *Options
+
 	done      chan struct{}
+	closeOnce sync.Once  // Zum Beenden
+	connected bool       // Interner Status
+	mu        sync.Mutex // Schützt den Zugriff auf c.conn während Reconnects
 }
 
-const (
-	// serverTimeout: Wenn wir so lange nichts vom Server hören, ist er tot.
-	// Muss länger sein als der Ping-Intervall des Servers!
-	serverTimeout = 60 * time.Second
+func New(logger gsflog.LogSink, o *Options) *Client {
+	//func New(logger gsflog.LogSink, opts ...func(*Options)) *Client {
 
-	// writeTimeout: Wie lange wir Zeit haben, einen Pong zu senden
-	writeTimeout = 5 * time.Second
-)
+	// Default-Optionen
+	opts := defaultOptions()
+	if o != nil {
 
-// Dial verbindet sich mit dem Server
-func Dial(url string) (*Client, error) {
-	conn, _, err := websocket.DefaultDialer.Dial(url, nil)
-	if err != nil {
-		return nil, err
+		// Update with user-Options
+		if o.PongWait > 0 {
+			opts.PongWait = o.PongWait
+		}
+		if o.PingPeriod > 0 {
+			opts.PingPeriod = o.PingPeriod
+		}
+		if o.MaxBackoff > 0 {
+			opts.MaxBackoff = o.MaxBackoff
+		}
+		if o.WriteTimeout > 0 {
+			opts.WriteTimeout = o.WriteTimeout
+		}
+		if o.Logger.LogFile != "" {
+			opts.Logger.LogFile = o.Logger.LogFile
+		}
+		if o.Logger.LogLevel != "" {
+			opts.Logger.LogLevel = o.Logger.LogLevel
+		}
+		if o.Logger.LogFormat != "" {
+			opts.Logger.LogFormat = o.Logger.LogFormat
+		}
+		if o.Auth.User != "" {
+			opts.Auth.User = o.Auth.User
+		}
+		if o.Auth.Secret != "" {
+			opts.Auth.Secret = o.Auth.Secret
+		}
 	}
-
-	c := &Client{
-		conn:    conn,
+	return &Client{
+		Options: opts, // Wir speichern die Optionen im Client-Struct
 		pending: make(map[string]chan *nexIOproto.RPCResponse),
 		done:    make(chan struct{}),
+		Log:     logger.With("component", "nexIOclient"),
 	}
 
-	// Wenn der Server "Ping" ruft, setzen wir unsere Deadline zurück.
-	conn.SetPingHandler(func(appData string) error {
-		// 1. Lebenszeichen erhalten -> Uhr zurücksetzen
-		conn.SetReadDeadline(time.Now().Add(serverTimeout))
+}
 
-		// 2. Höflich mit "Pong" antworten (sonst kickt uns der Server)
-		err := conn.WriteControl(websocket.PongMessage, []byte(appData), time.Now().Add(writeTimeout))
-		if err == websocket.ErrCloseSent {
-			return nil
-		} else if e, ok := err.(interface{ Temporary() bool }); ok && e.Temporary() {
-			return nil
+// Run startet den Client und hält die Verbindung aktiv.
+func (c *Client) Run(ctx context.Context, authParams interface{}) {
+	//c.url = url
+	c.auth = authParams
+
+	backoff := time.Second
+	maxBackoff := c.Options.MaxBackoff
+
+	for {
+		c.Log.With("url", c.Options.Url).Info("Versuche Verbindung")
+
+		err := c.connectAndAuth()
+		if err != nil {
+			c.Log.With("error", err).With("backoff", backoff.String()).Error("Verbindung fehlgeschlagen")
+
+			select {
+			case <-time.After(backoff):
+				// Exponential Backoff: Wir warten jedes Mal etwas länger (bis max 32s)
+				backoff *= 2
+				if backoff > maxBackoff {
+					backoff = maxBackoff
+				}
+				continue
+			case <-ctx.Done():
+				return
+			}
 		}
-		return err
-	})
 
-	// Starte sofort den "Lauscher" im Hintergrund
+		// Wenn wir hier sind, steht die Verbindung!
+		backoff = time.Second // Backoff zurücksetzen
+		c.Log.Info("Verbindung steht und ist authentifiziert.")
+
+		// Warten bis die Verbindung stirbt oder der Kontext beendet wird
+		select {
+		case <-c.done:
+			c.Log.Info("Verbindung zum Server verloren. Reconnect eingeleitet...")
+			// WICHTIG: c.done für den nächsten Versuch zurücksetzen
+			c.mu.Lock()
+			c.done = make(chan struct{})
+			c.closeOnce = sync.Once{} // CloseOnce auch resetten für neue Verbindung
+			c.mu.Unlock()
+		case <-ctx.Done():
+			c.Close()
+			return
+		}
+	}
+}
+
+func (c *Client) setupHandlers() {
+	c.conn.SetReadDeadline(time.Now().Add(c.Options.PongWait))
+	c.conn.SetPongHandler(func(string) error {
+		c.conn.SetReadDeadline(time.Now().Add(c.Options.PongWait))
+		return nil
+	})
+}
+
+// Interne Hilfsmethode für Dial + Auth
+func (c *Client) connectAndAuth() error {
+	conn, _, err := websocket.DefaultDialer.Dial(c.Options.Url, nil)
+	if err != nil {
+		return err
+	}
+	c.mu.Lock()
+	c.conn = conn
+	c.connected = true
+	c.mu.Unlock()
+
+	// Ping/Read Deadline Handler wieder setzen (wie gehabt)
+	c.setupHandlers()
+
+	// readLoop starten
 	go c.readLoop()
 
-	return c, nil
+	// Automatischer Login, falls Auth-Parameter vorhanden sind
+	if c.auth != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), c.Options.CtxTimeout) //  5*time.Second)
+		defer cancel()
+
+		var loginRes interface{} // Hier könnte man ein spezielles Struct nehmen
+		err := c.Call(ctx, "auth.login", c.auth, &loginRes)
+		if err != nil {
+			c.Close()
+			return fmt.Errorf("auth failed: %w", err)
+		}
+	}
+
+	if c.OnStatusChange != nil {
+		c.OnStatusChange(true)
+	}
+
+	return nil
 }
 
 // Eine Methode, damit der User prüfen kann, ob wir noch leben
@@ -154,69 +252,66 @@ func (c *Client) Call(ctx context.Context, method string, params interface{}, re
 // Close schließt die Verbindung
 func (c *Client) Close() {
 	c.closeOnce.Do(func() {
-		c.conn.Close()
+		c.mu.Lock()
+		wasConnected := c.connected
+		c.connected = false
+		if c.conn != nil {
+			c.conn.Close()
+		}
+		c.mu.Unlock()
+		close(c.done)
+
+		if wasConnected && c.OnStatusChange != nil {
+			c.OnStatusChange(false)
+		}
 	})
+}
+
+func (c *Client) IsConnected() bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.connected
 }
 
 // readLoop läuft im Hintergrund und verteilt eingehende Nachrichten
 func (c *Client) readLoop() {
-	defer close(c.done)
 	defer c.Close()
-
-	// Wenn diese Loop endet (Verbindung weg), müssen wir aufräumen!
-	defer func() {
-		c.pendingMu.Lock()
-		for id, ch := range c.pending {
-			close(ch) // <--- WICHTIG: Signalisieren, dass nichts mehr kommt
-			delete(c.pending, id)
-		}
-		c.pendingMu.Unlock()
-	}()
 
 	for {
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
-			log.Printf("CLIENT READ ERROR: %v\n", err)
-			log.Println("Client connection closed:", err)
+			c.Log.With("Error", err).Error("CLIENT READ ERROR")
 			return
 		}
 
-		// Deadline verlängern bei JEDER Nachricht ---
-		c.conn.SetReadDeadline(time.Now().Add(serverTimeout))
+		// DEBUG: Wir loggen ALLES, was vom Server reinkommt
+		c.Log.With("Message", string(message)).Debug("DEBUG: Roh-Daten vom Server erhalten")
 
-		// Wir parsen erst generisch
+		// Erster Versuch: Ist es eine Response?
 		var resp nexIOproto.RPCResponse
-		if err := json.Unmarshal(message, &resp); err != nil {
-			continue // Parse error ignorieren
-		}
 
-		// Fall A: Es ist eine Antwort auf einen Request (hat ID)
-		if resp.ID != nil {
-			// ID String säubern (da json.RawMessage Anführungszeichen enthalten kann)
+		err = json.Unmarshal(message, &resp)
+		if err == nil && resp.ID != nil {
+			// Es ist eine Antwort auf einen Call
 			var idStr string
 			json.Unmarshal(*resp.ID, &idStr)
-
 			c.pendingMu.Lock()
 			ch, found := c.pending[idStr]
 			c.pendingMu.Unlock()
-
 			if found {
 				ch <- &resp
 			}
 		} else {
-			// Fall B: Es ist eine Notification (keine ID)
-			// Hier greift der User-Callback
-			if c.OnNotification != nil {
-				// Da RPCResponse Struktur für Result/Error optimiert ist,
-				// müssten wir eigentlich RPCNotification parsen.
-				// Der Einfachheit halber tun wir so, als wäre 'Method' im JSON.
-				// (Für saubere Lösung: Ein generisches struct parsen)
-				var notif nexIOproto.RPCNotification
-				if err := json.Unmarshal(message, &notif); err == nil {
-					// Async aufrufen, damit wir ReadLoop nicht blockieren
-					go c.OnNotification(notif.Method, json.RawMessage{})
-					// Hinweis: Params Handling hier vereinfacht
+			// Wenn es keine ID hat ODER der erste Parse fehlgeschlagen ist
+			// Versuchen wir es als Notification
+			var notif nexIOproto.RPCNotification
+			if errNotif := json.Unmarshal(message, &notif); errNotif == nil {
+				if c.OnNotification != nil {
+					go c.OnNotification(notif.Method, notif.Params)
 				}
+			} else {
+				// Nur wenn BEIDES fehlschlägt, loggen wir den Fehler
+				c.Log.With("errNotif", errNotif).Debug("DEBUG: Weder Response noch Notification")
 			}
 		}
 	}

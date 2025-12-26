@@ -29,6 +29,15 @@ func NewDefault(logFileName *string) *Logger {
 	return mLogger
 }
 
+func NewDefaultConsole() *Logger {
+	consoleSink := NewDefaultConsoleSink()
+
+	mLogger := New()
+	mLogger.AddNamed("Console", consoleSink)
+
+	return mLogger
+}
+
 func (m *Logger) AddNamed(name string, logger LogSink) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
