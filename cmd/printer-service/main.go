@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/georghagn/gsf-suite/pkg/gsfconfig"
 	"github.com/georghagn/gsf-suite/pkg/gsflog"
@@ -28,9 +29,8 @@ func main() {
 
 	// Brücke bauen: gsfconfig -> nexIOclient.ProtocolSettings
 	defaultLogger := nexIOclient.LogOptions{
-		LogFile:   cfg.Client.Log.LogFile,
-		LogLevel:  cfg.Client.Log.Level,
-		LogFormat: cfg.Client.Log.Format,
+		LogFile:  cfg.Client.Log.LogFile,
+		LogLevel: cfg.Client.Log.Level,
 	}
 
 	defaultAuth := nexIOclient.AuthOptions{
@@ -48,7 +48,21 @@ func main() {
 		Auth:         defaultAuth,
 	}
 
+	loglevel := gsflog.LevelInfo
 	logger := gsflog.NewDefault(&clientSettings.Logger.LogFile)
+	switch strings.ToUpper(clientSettings.Logger.LogLevel) {
+	case "DEBUG":
+		loglevel = gsflog.LevelDebug
+	case "INFO":
+		loglevel = gsflog.LevelInfo
+	case "WARN":
+		loglevel = gsflog.LevelWarn
+	case "ERROR":
+		loglevel = gsflog.LevelError
+	default:
+		loglevel = gsflog.LevelInfo
+	}
+	logger.SetLevel(loglevel)
 
 	// Client erstellen mit dem Bulk-Update
 	client := nexIOclient.New(
@@ -74,17 +88,18 @@ func main() {
 
 	// 3. Authentifizierungs-Daten vorbereiten
 	// Das wird bei jedem (Wieder-)Verbinden automatisch mitgeschickt
-	/*
-		authParams := map[string]string{
-			"username": "admin",
-			"password": "default-secret",
-		}
-	*/
+
 	authParams := map[string]string{
-		"username": client.Options.Auth.User,
-		"password": client.Options.Auth.Secret,
+		"username": "admin",
+		"password": "admin-01",
 	}
 
+	/*
+		authParams := map[string]string{
+			"username": client.Options.Auth.User,
+			"password": client.Options.Auth.Secret,
+		}
+	*/
 	// 4. Den Client starten
 	// Run blockiert, solange der Kontext aktiv ist.
 	logger.Info("Printer Service startet...")

@@ -9,6 +9,7 @@ import (
 
 // Config bildet die Struktur unserer config.yaml ab
 
+/*
 // ProtocolConfig enthält alle technischen WebSocket-Parameter
 type ProtocolConfig struct {
 	PongWait     time.Duration `mapstructure:"pong_wait"`
@@ -16,6 +17,7 @@ type ProtocolConfig struct {
 	MaxBackoff   time.Duration `mapstructure:"max_backoff"`
 	WriteTimeout time.Duration `mapstructure:"write_timeout"`
 }
+*/
 
 type ServerConfig struct {
 	Port            string        `mapstructure:"port"`
@@ -27,7 +29,6 @@ type ServerConfig struct {
 	WritebufferSize int           `mapstructure:"writebuffer_size"`
 	Log             LogConfig     `mapstructure:"log"`
 	Auth            AuthConfig    `mapstructure:"auth"`
-	// URL  string `mapstructure:"url"` // Wichtig für den Client (z.B. ws://localhost:8080/ws)
 }
 
 type ClientConfig struct {
@@ -49,18 +50,17 @@ type AuthConfig struct {
 
 // LogConfig hält die Logger-Parameter
 type LogConfig struct {
-	Level   string `mapstructure:"level"`  // z.B. "debug", "info"
-	Format  string `mapstructure:"format"` // z.B. "json", "text"
+	Level   string `mapstructure:"level"` // z.B. "debug", "info"
 	LogFile string `mapstructure:"log_file"`
 }
 
 // Config ist das Haupt-Struct, das alles bündelt
 type Config struct {
-	Server   ServerConfig   `mapstructure:"server"`
-	Client   ClientConfig   `mapstructure:"client"`
-	Protocol ProtocolConfig `mapstructure:"protocol"`
-	Auth     AuthConfig     `mapstructure:"auth"`
-	Log      LogConfig      `mapstructure:"log"`
+	Server ServerConfig `mapstructure:"server"`
+	Client ClientConfig `mapstructure:"client"`
+	//Protocol ProtocolConfig `mapstructure:"protocol"`
+	//Auth     AuthConfig     `mapstructure:"auth"`
+	//Log      LogConfig      `mapstructure:"log"`
 }
 
 // Load liest die Config aus Dateien und Environment-Variablen
@@ -100,11 +100,5 @@ func Load() (*Config, error) {
 		return nil, err
 	}
 
-	/*
-		// Abgeleitete Defaults (Ping sollte immer etwas kürzer als Pong sein)
-		if c.Protocol.PingPeriod == 0 {
-			c.Protocol.PingPeriod = (c.Protocol.PongWait * 9) / 10
-		}
-	*/
 	return &c, nil
 }

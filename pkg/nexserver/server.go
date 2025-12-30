@@ -1,72 +1,68 @@
 package nexIOserver
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"sync"
 
-	"github.com/georghagn/gsf-suite/pkg/gsfconfig"
 	"github.com/georghagn/gsf-suite/pkg/gsflog"
 	"github.com/georghagn/gsf-suite/pkg/nexproto"
-	"github.com/gorilla/websocket"
 )
 
 type Server struct {
-	// Alle aktiven Verbindungen
-	sessions map[*Session]bool
-	// Das Telefonbuch (UserID -> Liste von Sessions)
-	userSessions map[string][]*Session
-	// Registrierte RPC-Handler (z.B. auth.login)
-	handlers map[string]RPCHandlerFunc
-
-	// Kanäle für die Steuerung
-	broadcast  chan []byte   // Nachrichten an alle
-	register   chan *Session // Neue Verbindung
-	unregister chan *Session // Verbindung beendet
-	shutdown   chan struct{} // Server stoppen (ehemals quit)
-
-	Log     gsflog.LogSink
-	options *Options
-
-	mu sync.RWMutex // Mutex für Threadsicherheit bei Map-Zugriffen
+	authenticator Authenticator // Das Interface-Feld
+	Hub           *Hub
+	Log           gsflog.LogSink
+	options       *Options
 }
 
-func New(logger gsflog.LogSink, cfg gsfconfig.ProtocolConfig) *Server {
-	return &Server{
-		broadcast:    make(chan []byte),
-		register:     make(chan *Session),
-		unregister:   make(chan *Session),
-		sessions:     make(map[*Session]bool),
-		userSessions: make(map[string][]*Session),
-		handlers:     make(map[string]RPCHandlerFunc),
-		shutdown:     make(chan struct{}),
-
-		Log: logger.With("component", "nexIOserver"),
-		//options: cfg,
-		options: nil,
+func New(logger gsflog.LogSink, auth Authenticator, opts *Options) *Server {
+	if auth == nil {
+		auth = &DummyAuthenticator{}
 	}
+	server := &Server{
+		Hub:           NewHub(logger, opts),
+		authenticator: auth,
+		Log:           logger.With("component", "nexIOserver"),
+		options:       opts,
+	}
+
+	server.registerDefaultHandlers()
+	return server
 }
 
 // Register fügt einen Handler hinzu (Thread-Safe)
 func (s *Server) Register(method string, handler RPCHandlerFunc) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.handlers[method] = handler
+	s.Hub.mu.Lock()
+	defer s.Hub.mu.Unlock()
+	s.Hub.handlers[method] = handler
+}
+
+func (s *Server) registerDefaultHandlers() {
+	// Wir hüllen s.handleLogin ein, um die Typ-Unterschiede (Context & Error-Typ) auszugleichen
+	s.Hub.Handle("auth.login", func(ctx context.Context, session *Session, params json.RawMessage) (interface{}, *nexIOproto.RPCError) {
+		result, err := s.handleLogin(session, params)
+		if err != nil {
+			// Wir wandeln den normalen Go-Error in einen nexIOproto.RPCError um
+			return nil, nexIOproto.NewRPCError(nexIOproto.ErrCodeInternal, err.Error())
+		}
+		return result, nil
+	})
 }
 
 // BindUser verknüpft eine Session mit einer UserID
 func (s *Server) BindUser(session *Session, userID string) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.Hub.mu.Lock()
+	defer s.Hub.mu.Unlock()
 
 	// Prüfen, ob diese Session bereits für diesen User registriert ist
-	for _, sess := range s.userSessions[userID] {
+	for _, sess := range s.Hub.userSessions[userID] {
 		if sess == session {
 			return // Schon drin, nichts tun
 		}
 	}
 
-	s.userSessions[userID] = append(s.userSessions[userID], session)
+	s.Hub.userSessions[userID] = append(s.Hub.userSessions[userID], session)
 	session.Store["userID"] = userID
 
 	s.Log.With("user_id", userID).Info("User bound to session")
@@ -95,10 +91,10 @@ func (s *Server) BroadcastToAuthenticated(method string, params interface{}) {
 		return
 	}
 
-	s.mu.RLock()
-	defer s.mu.RUnlock()
+	s.Hub.mu.RLock()
+	defer s.Hub.mu.RUnlock()
 
-	for session := range s.sessions {
+	for session := range s.Hub.sessions {
 		if session.IsAuth {
 			select {
 			case session.send <- msgBytes:
@@ -111,93 +107,15 @@ func (s *Server) BroadcastToAuthenticated(method string, params interface{}) {
 
 // Shutdown initiiert das Herunterfahren
 func (s *Server) Shutdown() {
-	close(s.shutdown)
-}
-
-// Run ist die Hauptschleife des Servers
-func (s *Server) Run() {
-	s.Log.Info("NexIO Hub gestartet")
-
-	for {
-		select {
-		// 1. Neuer Client verbindet sich
-		case session := <-s.register:
-			s.mu.Lock()
-			s.sessions[session] = true
-			s.mu.Unlock()
-
-		// 2. Client trennt Verbindung
-		case session := <-s.unregister:
-			s.mu.Lock()
-			if _, ok := s.sessions[session]; ok {
-				// 1. Aus der Haupt-Map löschen
-				delete(s.sessions, session)
-
-				// 2. Aus dem User-Telefonbuch löschen
-				if userID, ok := session.Store["userID"].(string); ok {
-					sessions := s.userSessions[userID]
-					for i, sess := range sessions {
-						// WICHTIG: Wir vergleichen den Pointer!
-						if sess == session {
-							s.userSessions[userID] = append(sessions[:i], sessions[i+1:]...)
-							break
-						}
-					}
-					if len(s.userSessions[userID]) == 0 {
-						delete(s.userSessions, userID)
-					}
-				}
-
-				// 3. Kanal schließen
-				close(session.send)
-			}
-			s.mu.Unlock()
-
-		// 3. Nachricht an ALLE (Der Broadcast Fall)
-		case message := <-s.broadcast:
-			s.mu.RLock()
-			for session := range s.sessions {
-				// Hier filtern wir: Nur authentifizierte User bekommen Broadcasts
-				if session.IsAuth {
-					select {
-					case session.send <- message:
-					default:
-						// Wenn der Client blockiert oder der Buffer voll ist, kicken wir ihn
-						close(session.send)
-						delete(s.sessions, session)
-					}
-				}
-			}
-			s.mu.RUnlock()
-
-		// 4. Server herunterfahren (Ersetzt 'quit')
-		case <-s.shutdown:
-			s.Log.Info("NexIO Hub fährt herunter...")
-			s.mu.Lock()
-			for session := range s.sessions {
-				// Höfliches "Tschüss" an den Browser senden
-				session.conn.WriteMessage(
-					websocket.CloseMessage,
-					websocket.FormatCloseMessage(websocket.CloseGoingAway, "Server shutting down"),
-				)
-				session.conn.Close()
-				close(session.send)
-			}
-			// Map leeren
-			s.sessions = make(map[*Session]bool)
-			s.mu.Unlock()
-			s.Log.Info("NexIO Hub gestoppt.")
-			return
-		}
-	}
+	close(s.Hub.shutdown)
 }
 
 // SendToUser sendet eine Notification an alle Verbindungen eines bestimmten Users
 func (s *Server) SendToUser(userID string, method string, params interface{}) error {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
+	s.Hub.mu.RLock()
+	defer s.Hub.mu.RUnlock()
 
-	sessions, found := s.userSessions[userID]
+	sessions, found := s.Hub.userSessions[userID]
 	if !found || len(sessions) == 0 {
 		return fmt.Errorf("user '%s' not connected", userID)
 	}
@@ -225,4 +143,37 @@ func (s *Server) SendToUser(userID string, method string, params interface{}) er
 		}
 	}
 	return nil
+}
+
+func (s *Server) handleLogin(session *Session, params json.RawMessage) (interface{}, error) {
+	var creds struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+
+	// 1. Parameter parsen
+	if err := json.Unmarshal(params, &creds); err != nil {
+		return nil, fmt.Errorf("invalid login parameters")
+	}
+
+	// 2. Authentifizierung prüfen
+	userID, success := s.authenticator.Authenticate(creds.Username, creds.Password)
+
+	// FEHLERFALL
+	if !success {
+		s.Log.With("User", creds.Username).Warn("Login failed for user")
+		return nil, fmt.Errorf("auth failed") // Hier brechen wir ab!
+	}
+
+	// ERFOLGSFALL
+	// 3. Session im Hub branden (Identity-Management)
+	// Nutze hier den exakten Namen der Methode, die du in hub.go erstellt hast
+	s.Hub.BindSessionToUser(session, userID)
+
+	s.Log.With("UserID", userID).Info("User logged in successfully")
+
+	return map[string]string{
+		"status":  "success",
+		"user_id": userID,
+	}, nil
 }

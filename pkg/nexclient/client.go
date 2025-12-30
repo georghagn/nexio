@@ -17,7 +17,6 @@ import (
 // Client repräsentiert eine Verbindung zum GSF Server
 type Client struct {
 	conn *websocket.Conn
-	//url  string      // Damit wir wissen, wohin wir uns wiederverbinden
 	auth interface{} // Damit wir uns automatisch neu einloggen können
 
 	seq       uint64                                  // Atomic Counter für eindeutige Request IDs
@@ -37,7 +36,6 @@ type Client struct {
 }
 
 func New(logger gsflog.LogSink, o *Options) *Client {
-	//func New(logger gsflog.LogSink, opts ...func(*Options)) *Client {
 
 	// Default-Optionen
 	opts := defaultOptions()
@@ -61,9 +59,6 @@ func New(logger gsflog.LogSink, o *Options) *Client {
 		}
 		if o.Logger.LogLevel != "" {
 			opts.Logger.LogLevel = o.Logger.LogLevel
-		}
-		if o.Logger.LogFormat != "" {
-			opts.Logger.LogFormat = o.Logger.LogFormat
 		}
 		if o.Auth.User != "" {
 			opts.Auth.User = o.Auth.User

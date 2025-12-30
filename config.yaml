@@ -8,9 +8,9 @@ server:
   shutdown_delay: 5s 
   readbuffer_size: 1024   # bytes
   writebuffer_size: 1024  # bytes
+  ping_period: 60s
   log:
-    level: debug        # [debug | info | warn | error] 
-    format: json        # [json | text]
+    level: info        # [debug | info | warn | error] 
     log_file: nexIOserver.log
 
 client:
@@ -22,18 +22,8 @@ client:
   max_messagesize: 512  # bytes
   log:
     level: info        # [debug | info | warn | error] 
-    format: json       # [json | text]
     log_file: nexIOclient.log
   auth:
     user: admin
-    secret: default-secret # do NOT in production use ENV [ GSF_CLIENT_AUTH_SECRET ] instead
+    secret: "default-secret" # do NOT in production use ENV [ GSF_CLIENT_AUTH_SECRET ] instead
     
-# RPC Messaging
-protocol:
-  pong_wait: 60        # seconds
-  #ping_period  = 90% von pong
-  write_deadline: 10    # seconds
-  max_messagesize: 512  # bytes
-  max_backoff: 30       # seconds
-
-

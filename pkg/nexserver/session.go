@@ -6,49 +6,32 @@ import (
 	"time"
 
 	"github.com/georghagn/gsf-suite/pkg/gsflog"
-	"github.com/georghagn/gsf-suite/pkg/nexproto"
+	"github.com/georghagn/gsf-suite/pkg/nexproto" // Achte darauf, ob nexproto oder nexIOproto!
 	"github.com/gorilla/websocket"
 )
 
+// RPCHandlerFunc Signatur (angepasst an deine Bedürfnisse)
 type RPCHandlerFunc func(ctx context.Context, s *Session, params json.RawMessage) (interface{}, *nexIOproto.RPCError)
 
-// --- Konstanten für stabiles Verbindungs-Management ---
-const (
-	// Zeit, die wir warten, um eine Nachricht zu schreiben (Write Deadline)
-	writeWait = 10 * time.Second
-
-	// Zeit, wie lange wir auf ein Pong vom Client warten (Read Deadline)
-	pongWait = 60 * time.Second
-
-	// Intervall, in dem wir Pings an den Client senden.
-	// MUSS kleiner sein als pongWait (z.B. 90% davon).
-	pingPeriod = (pongWait * 9) / 10
-
-	// Maximale Nachrichtengröße (in Bytes)
-	maxMessageSize = 512
-)
-
-// Session ... (Struct bleibt gleich)
 type Session struct {
-	ID string
+	UserID string
+	IsAuth bool
+	Store  map[string]interface{}
 
-	IsAuth  bool
-	Store   map[string]interface{}
 	Context context.Context
+	cancel  context.CancelFunc
 
-	cancel context.CancelFunc
-
-	server *Server
-	conn   *websocket.Conn
-	send   chan []byte
+	// REFAC: Wir zeigen jetzt direkt auf den Hub, nicht mehr auf den Server
+	Hub  *Hub
+	conn *websocket.Conn
+	send chan []byte
 
 	log gsflog.LogSink
 }
 
-// writePump: Sendet Nachrichten UND Pings
 func (s *Session) writePump() {
-	// Ticker startet den Herzschlag (Ping)
-	ticker := time.NewTicker(pingPeriod)
+	// Wir nutzen die Werte aus den Hub-Optionen (kein Hardcoding mehr!)
+	ticker := time.NewTicker(s.Hub.options.PingPeriod)
 
 	defer func() {
 		ticker.Stop()
@@ -58,8 +41,7 @@ func (s *Session) writePump() {
 	for {
 		select {
 		case message, ok := <-s.send:
-			// Wir setzen eine Deadline, damit wir nicht ewig blockieren
-			s.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			s.conn.SetWriteDeadline(time.Now().Add(s.Hub.options.WriteDeadline))
 
 			if !ok {
 				s.conn.WriteMessage(websocket.CloseMessage, []byte{})
@@ -72,7 +54,7 @@ func (s *Session) writePump() {
 			}
 			w.Write(message)
 
-			// Optimierung: Alle wartenden Nachrichten im Channel direkt mitsenden
+			// Optimierung: Wartende Nachrichten mitsenden
 			n := len(s.send)
 			for i := 0; i < n; i++ {
 				w.Write(<-s.send)
@@ -82,12 +64,10 @@ func (s *Session) writePump() {
 				return
 			}
 
-		// --- NEU: Der Ticker feuert regelmäßig ---
 		case <-ticker.C:
-			s.conn.SetWriteDeadline(time.Now().Add(writeWait))
-			// Wir senden einen PING (OpCode 9). Der Browser antwortet automatisch mit PONG.
+			s.conn.SetWriteDeadline(time.Now().Add(s.Hub.options.WriteDeadline))
 			if err := s.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-				return // Wenn Ping fehlschlägt, ist die Verbindung tot -> Abbruch
+				return
 			}
 
 		case <-s.Context.Done():
@@ -96,22 +76,20 @@ func (s *Session) writePump() {
 	}
 }
 
-// readPump: Empfängt Nachrichten UND verarbeitet Pongs
 func (s *Session) readPump() {
 	defer func() {
-		s.server.unregister <- s
+		// REFAC: Zugriff auf Hub Kanäle
+		s.Hub.unregister <- s
 		s.conn.Close()
 		s.cancel()
 	}()
 
-	s.conn.SetReadLimit(maxMessageSize)
+	// Hier nutzen wir wieder die Hub-Optionen
+	s.conn.SetReadLimit(4096) // Oder s.Hub.options.MaxMessageSize
+	s.conn.SetReadDeadline(time.Now().Add(s.Hub.options.PongWait))
 
-	// --- NEU: Deadlines initialisieren ---
-	s.conn.SetReadDeadline(time.Now().Add(pongWait))
-
-	// Wenn ein PONG (OpCode 10) reinkommt, verlängern wir die Deadline
 	s.conn.SetPongHandler(func(string) error {
-		s.conn.SetReadDeadline(time.Now().Add(pongWait))
+		s.conn.SetReadDeadline(time.Now().Add(s.Hub.options.PongWait))
 		return nil
 	})
 
@@ -119,101 +97,62 @@ func (s *Session) readPump() {
 		_, message, err := s.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				//s.log.Warn("WS Error: %v", err)
-				s.log.With("Error", err).Warn("WS Error")
-			} else {
-				s.log.Debug("WebSocket closed normally")
+				s.log.With("Error", err).Warn("WS Unexpected Close")
 			}
 			break
 		}
 
-		// LOGGING: Nachricht empfangen
-		s.log.With("Message", string(message)).Debug("RX Raw Message")
+		s.log.With("Message", string(message)).Debug("RX Raw")
 
 		var req nexIOproto.RPCRequest
 		if err := json.Unmarshal(message, &req); err != nil {
-			s.log.Warn("JSON Parse Error")
 			s.sendError(nil, nexIOproto.NewRPCError(nexIOproto.ErrCodeParse, nil))
 			continue
 		}
 
-		s.server.mu.RLock()
-		handler, exists := s.server.handlers[req.Method]
-		s.server.mu.RUnlock()
+		// REFAC: Zugriff auf Handler über den Hub
+		s.Hub.mu.RLock()
+		handler, exists := s.Hub.handlers[req.Method]
+		s.Hub.mu.RUnlock()
 
 		if !exists {
-			s.log.With("req.Method", req.Method).Warn("Method not found")
 			s.sendError(req.ID, nexIOproto.NewRPCError(nexIOproto.ErrCodeMethodNotFound, req.Method))
 			continue
 		}
 
 		go func(r nexIOproto.RPCRequest, h RPCHandlerFunc) {
-			// Wenn der Kanal geschlossen ist, stirbt diese Goroutine leise,
-			// statt den ganzen Server mitzureißen.
 			defer func() {
 				if r := recover(); r != nil {
-					s.log.Error("PANIC in Handler!")
-					// Optional: log.Printf("Senden fehlgeschlagen (Verbindung weg): %v", r)
+					s.log.Error("PANIC in Handler")
 				}
 			}()
 
-			s.log.With("r.Method", r.Method).Debug("Executing Handler")
-
-			start := time.Now() // Zeitmessung
 			res, rpcErr := h(s.Context, s, r.Params)
-			duration := time.Since(start)
 
-			//s.log.Debug("Handler finished: " + r.Method + " took " + duration.String())
-			s.log.With("r.Method", r.Method).With("took", duration.String()).Debug("Handler finished")
-
-			res, rpcErr = h(s.Context, s, r.Params)
 			if r.ID != nil {
 				resp := nexIOproto.RPCResponse{JSONRPC: "2.0", ID: r.ID}
 				if rpcErr != nil {
 					resp.Error = rpcErr
-					s.log.With("rpcErr.Message", rpcErr.Message).Warn("Handler returned Error")
 				} else {
 					resp.Result = res
 				}
 				bytes, _ := json.Marshal(resp)
-				select {
-				case s.send <- bytes:
-				default:
-					s.log.Error("Send Buffer full or channel closed, dropping response")
-				}
+				s.send <- bytes
 			}
 		}(req, handler)
 	}
 }
 
-// Helper zum Senden von Fehlern
 func (s *Session) sendError(id *json.RawMessage, errObj *nexIOproto.RPCError) {
-	resp := nexIOproto.RPCResponse{
-		JSONRPC: "2.0",
-		ID:      id,
-		Error:   errObj,
-	}
+	resp := nexIOproto.RPCResponse{JSONRPC: "2.0", ID: id, Error: errObj}
 	b, _ := json.Marshal(resp)
-	s.send <- b
-}
-
-// Helper: Holt den User aus dem Store, wenn eingeloggt
-// Gibt nil zurück, wenn nicht eingeloggt.
-func (s *Session) GetUser() interface{} {
-	if !s.IsAuth {
-		return nil
+	select {
+	case s.send <- b:
+	default:
 	}
-	if u, ok := s.Store["user"]; ok {
-		return u
-	}
-	return nil
 }
 
-// BindUser ist ein Wrapper, damit externe Services den User binden können
-func (s *Session) BindUser(userID string) {
-	s.server.BindUser(s, userID)
+// Bind entfernt die alte s.server Abhängigkeit
+func (s *Session) Bind(userID string) {
+	s.Hub.BindSessionToUser(s, userID)
 }
-
-// Helper: Typsicherer Zugriff (erfordert, dass du das User-Struct kennst)
-// Da "User" aber Teil deiner App-Logik ist und nicht nexIO,
-// belassen wir es hier beim generischen Interface.
