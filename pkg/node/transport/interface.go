@@ -1,4 +1,4 @@
-// Copyright 2025 Georg Hagn
+// Copyright 2026 Georg Hagn
 // SPDX-License-Identifier: Apache-2.0
 
 package transport
@@ -25,7 +25,7 @@ type LogSink interface {
 	With(key string, value any) LogSink
 }
 
-// default in Konstruktor: Silentlogger No-Op-Logger
+// default in Construktor: Silentlogger No-Op-Logger
 // => no panic if logger is not explicitly set
 type SilentLogger struct{}
 

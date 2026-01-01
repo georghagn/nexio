@@ -42,6 +42,38 @@ GSF is **not** a full-stack framework and does not try to replace existing ecosy
 
 Please also refer to the README files in the respective modules.
 
+---
+
+#### nexIOnode (pkg/node)
+
+The core of bidirectional communication. It breaks with the classic client-server paradigm and replaces it with a symmetrical peer architecture.
+
+* **Symmetry:** Each node can register methods and simultaneously send requests to its partner as a client.
+* **Resilience Engine:** An integrated state machine monitors the connection and uses exponential backoff for reconnection without blocking the running application logic.
+* **Type Safety:** Go generics (`Bind[T]`) securely convert JSON-RPC parameters into native Go structures.
+
+---
+
+#### nexIOlog & nexIOlog/rotate (pkg/gsflog)
+
+A high-performance, structured logging system optimized for long-term operation in microservices.
+* **Interface Abstraction:** Decoupled via the `LogSink` interface, the logger can be deployed in any module (RPC, Transport, Scheduler) without creating hard dependencies.
+* **Atomic Rotation:** Implements robust file rotation with a `.LOCK` mechanism. Each log event is written atomically (Open -> Write -> Close), guaranteeing maximum integrity even in the event of system crashes.
+* **Contextual Logging:** Supports enriching log entries with contextual data (`With`) to enable tracing across distributed nodes.
+
+##### `gsflog`
+
+A minimal logger with log levels and structured fields.
+
+- Writes to any `io.Writer`
+- No archiving, rotation, or retention
+- Not a replacement for established logging frameworks
+
+Responsibilities:
+> Format and output log messages
+
+---
+
 #### `gsflog`
 A minimal logger with log levels and structured fields.
 
@@ -67,16 +99,21 @@ Responsibility:
 
 ---
 
-#### `schedule`
-A small job scheduler.
+#### nexIOschedule (pkg/schedule)
 
-- Periodic jobs (`Every`)
-- One-shot jobs (`At`)
-- Panic-safe execution
-- Optional logger interface
+A precise scheduler for recurring tasks within the nexIO ecosystem.
+
+* **Interface-Driven:** Tasks are defined via a simple interface, enabling the execution of any Go function.
+* **Concurrency-Safe:** The scheduler is designed to manage hundreds of parallel jobs without impacting the real-time capability of RPC communication.
+* **Fault Tolerance:** If a job fails, it is logged with full context via the integrated `nexlog` system.
+
+- Periodic Jobs (`Every`)
+- One-Time Jobs (`At`)
+- Panic-Safe Execution
+- Optional Logger Interface
 
 Responsibility:
-> Execute jobs at specific times
+> Scheduled Job Execution
 
 ---
 
@@ -100,6 +137,7 @@ The `cmd/` directory contains runnable examples:
 - `cmd/main.go` – full example (logger + rotation + scheduler)
 - `cmd/rotate/main.go` – standalone rotation example
 - `cmd/schedule/main.go` – scheduler example
+- `cmd/node/gsfNodeExample/.../main.go` – Interaction of 3 nodes
 
 Each example is self-contained and meant as documentation by code.
 
@@ -116,6 +154,14 @@ GSF deliberately does **not** provide:
 - configuration frameworks
 
 GSF is infrastructure glue, not a platform.
+
+---
+
+### Organizational & Standards
+
+* **Copyright:** © 2026 Georg Hagn.
+* **Namespace:** All modules follow the naming convention `github.com/georghagn/gsf-suite/pkg/...`.
+* **Clean Code:** Strict separation of transport logic (WebSockets) and application logic (RPC).
 
 ---
 

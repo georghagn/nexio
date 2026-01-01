@@ -1,4 +1,4 @@
-// Copyright 2025 Georg Hagn
+// Copyright 2026 Georg Hagn
 // SPDX-License-Identifier: Apache-2.0
 
 package transport
@@ -11,7 +11,7 @@ import (
 	"github.com/coder/websocket"
 )
 
-// WSProvider kapselt die Logik für den Verbindungsaufbau
+// WSProvider encapsulates the logic for establishing the connection.
 type WSProvider struct {
 	server *http.Server
 	Log    LogSink
@@ -27,8 +27,8 @@ func NewWSProvider(logger LogSink) *WSProvider {
 	return p
 }
 
-// Serve wartet auf eine Verbindung (Server-Seite)
-// Wir nutzen einen Channel, um die Connection nach dem Upgrade zurückzugeben
+// Server is waiting for a connection (server-side)
+// We use a channel to reconnect after the upgrade
 func (p *WSProvider) Listen(ctx context.Context, addr string, found chan<- Connection) error {
 	p.Log.With("addr", addr).Info("WebSocket Server startet...")
 
@@ -41,7 +41,7 @@ func (p *WSProvider) Listen(ctx context.Context, addr string, found chan<- Conne
 		if err != nil {
 			return
 		}
-		// Neue Verbindung in den Posteingang der main schicken
+		// Send new connection to the main inbox
 		found <- &WSConnection{Conn: c}
 	})
 
@@ -50,19 +50,19 @@ func (p *WSProvider) Listen(ctx context.Context, addr string, found chan<- Conne
 		Handler: mux,
 	}
 
-	// Eine Goroutine, die auf den Abbruch des Contexts wartet
+	// A goroutine that waits for the context to be terminated.
 	go func() {
 		<-ctx.Done()
 		p.Log.Info("HTTP-Server fährt herunter...")
 		p.server.Shutdown(context.Background())
 	}()
 
-	// ListenAndServe blockiert hier, bis Shutdown() aufgerufen wird
+	//ListenAndServe blocks here until Shutdown() is called.
 	return p.server.ListenAndServe()
 
 }
 
-// Dial verbindet sich mit einem Server (Client-Seite)
+// Dial connects to a server (client side)
 func (p *WSProvider) Dial(ctx context.Context, url string) (Connection, error) {
 	p.Log.With("url", url).Info("Dial...")
 	c, _, err := websocket.Dial(ctx, url, nil)

@@ -1,4 +1,4 @@
-// Copyright 2025 Georg Hagn
+// Copyright 2026 Georg Hagn
 // SPDX-License-Identifier: Apache-2.0
 
 package rpc
@@ -17,7 +17,7 @@ import (
 type HandlerFunc func(ctx context.Context, params json.RawMessage) (any, error)
 
 type Node struct {
-	connMu sync.RWMutex //Schützt die Verbindung während des Austauschs
+	connMu sync.RWMutex //Protects the connection during the exchange.
 	conn   transport.Connection
 
 	handlers map[string]HandlerFunc
@@ -27,14 +27,14 @@ type Node struct {
 	pendingMu sync.Mutex
 	nextID    uint64
 
-	// Für den Reconnect-Mechanismus
+	// For the reconnect mechanism
 	dialAddr string
 	provider *transport.WSProvider
 
 	Log transport.LogSink
 }
 
-// Wir brauchen einen Typ für ausstehende Antworten
+// We need someone to handle outstanding answers.
 type pendingRequest struct {
 	done chan Response
 }
@@ -58,16 +58,16 @@ func NewNode(
 	return n
 }
 
-// Call sendet eine Anfrage und blockiert, bis die Antwort kommt
+// Call sends a request and blocks until the response arrives.
 func (node *Node) Call(ctx context.Context, method string, params any) (json.RawMessage, error) {
-	// 1. Verbindung sicher abgreifen
+	// 1. Secure connection
 	node.connMu.RLock()
 	currentConn := node.conn
 	node.connMu.RUnlock()
 
-	// Falls gerade ein Reconnect läuft oder die Verbindung weg ist: Kein Panic!
+	// If a reconnect is in progress or the connection is lost: No panic!
 	if currentConn == nil {
-		return nil, NewRPCError(ErrCodeInternalError, "Verbindung wird gerade wiederhergestellt")
+		return nil, NewRPCError(ErrCodeInternalError, "The connection is currently being re-established.")
 	}
 
 	// 2. ID generieren und in pending-Map registrieren
@@ -79,14 +79,14 @@ func (node *Node) Call(ctx context.Context, method string, params any) (json.Raw
 	node.pending[idStr] = pendingRequest{done: ch}
 	node.pendingMu.Unlock()
 
-	// Aufräumen nach dem Call
+	// Cleaning up after the call
 	defer func() {
 		node.pendingMu.Lock()
 		delete(node.pending, idStr)
 		node.pendingMu.Unlock()
 	}()
 
-	// 3. Request vorbereiten
+	// 3. Prepare request
 	pBytes, _ := json.Marshal(params)
 	req := Request{
 		JSONRPC: JRPCVERSION,
@@ -97,12 +97,12 @@ func (node *Node) Call(ctx context.Context, method string, params any) (json.Raw
 
 	data, _ := json.Marshal(req)
 
-	// 4. Senden über die KOPIE der Verbindung
+	// 4. Send via COPY of the connection
 	if err := currentConn.Send(ctx, data); err != nil {
 		return nil, err
 	}
 
-	// 5. Auf Antwort warten
+	// 5. Wait for answer
 	select {
 	case resp := <-ch:
 		if resp.Error != nil {
@@ -122,37 +122,36 @@ func (node *Node) Register(method string, h HandlerFunc) {
 
 func (node *Node) Listen(ctx context.Context) error {
 	for {
-		// 1. Verbindung sicher abgreifen
+		// 1.Secure connection
 		node.connMu.RLock()
 		currentConn := node.conn
 		node.connMu.RUnlock()
 
 		if currentConn == nil {
-			// Wenn wir keine Adresse haben (Server-Seite), können wir nicht re-connecten
+			// If we don't have an address (server-side), we can't reconnect.
 			if node.dialAddr == "" {
-				return fmt.Errorf("verbindung verloren und keine Reconnect-Adresse vorhanden")
+				return fmt.Errorf("Connection lost and no reconnect address available")
 			}
 
-			// Versuche Reconnect
+			// Vtry Reconnect
 			if err := node.attemptReconnect(ctx); err != nil {
 				return err
 			}
 			continue
 		}
 
-		// 2. Normales Zuhören
-		// Normales Lesen
+		// 2.Normal listening
 		data, err := currentConn.Receive(ctx)
 		if err != nil {
-			node.Log.With("error", err).Error("Netzwerk-Fehler: Bereite Reconnect vor...") // <--
+			node.Log.With("error", err).Error("Network error: Preparing to reconnect...")
 
-			// 1. Verbindung kappen
+			// 1. Cut connection
 			node.connMu.Lock()
 			node.conn = nil
 			node.connMu.Unlock()
 
-			// 2. Alle wartenden Calls abbrechen (damit sie nicht hängen)
-			node.cleanupPendingRequests("Verbindung verloren")
+			// 2. Cancel all pending calls (so they don't get stuck)
+			node.cleanupPendingRequests("Connection lost")
 
 			continue
 
@@ -162,25 +161,25 @@ func (node *Node) Listen(ctx context.Context) error {
 	}
 }
 
-// Notify sendet eine Benachrichtigung, auf die keine Antwort erwartet wird (keine ID).
+// Notify sends a notification to which no response is expected (no ID).
 func (node *Node) Notify(ctx context.Context, method string, params any) error {
-	// 1. Verbindung sicher abgreifen (Read-Lock)
+	// 1. Securely intercept connection (Read-Lock)
 	node.connMu.RLock()
 	currentConn := node.conn
 	node.connMu.RUnlock()
 
-	// Falls gerade ein Reconnect läuft: Fehler zurückgeben statt Panik
+	// If a reconnect is currently in progress: Report the error instead of panicking
 	if currentConn == nil {
-		return NewRPCError(ErrCodeInternalError, "Benachrichtigung fehlgeschlagen: Verbindung wird wiederhergestellt")
+		return NewRPCError(ErrCodeInternalError, "Notification failed: Reconnecting")
 	}
 
-	// 2. Parameter verarbeiten
+	// 2. Process parameters
 	pBytes, err := json.Marshal(params)
 	if err != nil {
 		return NewRPCError(ErrCodeParseError, []byte(err.Error()))
 	}
 
-	// 3. Request ohne ID erstellen (JSON-RPC Notification)
+	// 3. Create request without ID (JSON-RPC Notification)
 	req := Request{
 		JSONRPC: "2.0",
 		Method:  method,
@@ -192,9 +191,9 @@ func (node *Node) Notify(ctx context.Context, method string, params any) error {
 		return NewRPCError(ErrCodeJSONError, []byte(err.Error()))
 	}
 
-	// 4. Über die gesicherte Verbindung senden
+	// 4. Send via secure connection
 	if err := currentConn.Send(ctx, data); err != nil {
-		return err // Hier geben wir den Netzwerkfehler direkt zurück
+		return err // Here we are directly returning the network error.
 	}
 
 	return nil
@@ -209,17 +208,17 @@ func (node *Node) attemptReconnect(ctx context.Context) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
-			node.Log.With("dialAddr", node.dialAddr).Info("Versuche Reconnect")
+			node.Log.With("dialAddr", node.dialAddr).Info("Try Reconnect")
 			newConn, err := node.provider.Dial(ctx, node.dialAddr)
 			if err == nil {
-				node.Log.Info("Reconnect erfolgreich!")
+				node.Log.Info("Reconnect successful!")
 				node.connMu.Lock()
 				node.conn = newConn
 				node.connMu.Unlock()
 				return nil
 			}
 
-			node.Log.With("err", err).With("backoff", backoff).Error("Fehlgeschlagen, Nächster Versuch")
+			node.Log.With("err", err).With("backoff", backoff).Error("Failed, next attempt")
 
 			time.Sleep(backoff)
 			backoff *= 2
@@ -231,8 +230,8 @@ func (node *Node) attemptReconnect(ctx context.Context) error {
 }
 
 func (node *Node) handleIncoming(ctx context.Context, data []byte) {
-	// 1. Vorab-Check: Ist es ein Request oder eine Response?
-	// Wir schauen einfach, ob "method" im JSON vorkommt (schnellster Weg)
+	// 1. Preliminary Check: Is it a request or a response?
+	// We simply check if "method" appears in the JSON (fastest way)
 	if strings.Contains(string(data), `"method"`) {
 		var req Request
 		if err := json.Unmarshal(data, &req); err == nil {
@@ -260,7 +259,7 @@ func (node *Node) processRequest(ctx context.Context, req Request) {
 	} else {
 		result, err := handler(ctx, req.Params)
 		if err != nil {
-			// Hier nutzen wir das Data Feld für die Fehlermeldung aus Go
+			// Here we use the Data field for the error message from Go
 			resp.Error = NewRPCError(ErrCodeInternalError, err.Error())
 		} else {
 			resBytes, _ := json.Marshal(result)
@@ -268,28 +267,25 @@ func (node *Node) processRequest(ctx context.Context, req Request) {
 		}
 	}
 
-	// WICHTIG: Nur wenn eine ID vorhanden ist, schicken wir eine Antwort zurück.
+	// IMPORTANT: We will only send a reply if an ID is provided.
 	if req.ID != nil && string(req.ID) != "null" {
 		respBytes, _ := json.Marshal(resp)
 		_ = node.conn.Send(ctx, respBytes)
 	} else {
-		node.Log.With("req.Method", req.Method).Info("Notification erhalten")
+		node.Log.With("req.Method", req.Method).Info("Notification received")
 	}
 }
 
 func (node *Node) processResponse(resp Response) {
-	// Entfernt Anführungszeichen falls vorhanden
+	// Removes quotation marks if present.
 	idStr := strings.Trim(string(resp.ID), `"`)
-
-	//	idStr := string(resp.ID)
-	//    idStr = strings.Trim(idStr, `"`) // Entfernt Anführungszeichen falls vorhanden
 
 	node.pendingMu.Lock()
 	req, ok := node.pending[idStr]
 	node.pendingMu.Unlock()
 
 	if ok {
-		req.done <- resp // Zugriff über das Struct-Feld .done
+		req.done <- resp // Access via the .done struct field
 	}
 }
 

@@ -1,3 +1,6 @@
+// Copyright 2026 Georg Hagn
+// SPDX-License-Identifier: Apache-2.0
+
 package main
 
 import (
@@ -17,67 +20,67 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	// Provider incl. Log initialize
-	// zu DemoZwecken provider und node mit verschieden LogLevels ausrüsten
+	// provider incl. Log initialize
+	// for demonstration purposes, equip the provider and node with different log levels.
 	plogger := gsflog.NewDefaultConsole()
 	plogger.SetLevel(gsflog.LevelInfo)
 	pBaseL := adapter.Wrap(plogger.With("module", "payment-service"))
 
 	provider := transport.NewWSProvider(pBaseL)
 
-	// Der Channel, über den wir neue Verbindungen empfangen
+	// the channel through which we receive new connections
 	found := make(chan transport.Connection)
 
-	// 1. Den Port öffnen und auf "Anklopfen" warten (Server-Rolle)
+	// 1. open the port and wait for "knocking" (server role)
 	go func() {
-		pBaseL.Info("[Payment] Öffne Port :8080 und warte auf Order-Service...")
+		pBaseL.Info("[Payment] Open port :8080 and wait for order-service...")
 		if err := provider.Listen(ctx, ":8080", found); err != nil {
-			pBaseL.With("Error", err).Error("[Payment] Server-Fehler")
+			pBaseL.With("Error", err).Error("[Payment] Server-Error")
 		}
 	}()
 
-	// 2. Dispatcher-Loop: Was tun, wenn eine Verbindung reinkommt?
+	// 2. dispatcher-Loop: What to do when a connection comes in?
 	for {
 		select {
 		case conn := <-found:
-			pBaseL.Info("[Payment] Order-Service hat sich verbunden!")
-			// Wir erstellen den Peer mit der aktiven Verbindung.
-			// dialAddr ist leer, da der Server auf diesen Client nicht re-connecten muss.
+			pBaseL.Info("[Payment] Order service has connected!")
+			// we create the peer with the active connection.
+			// dialAddr is empty because the server doesn't need to reconnect to this client.
 			go handleClient(ctx, conn, pBaseL)
 
 		case <-ctx.Done():
-			pBaseL.Info("[Payment] Service wird beendet...")
+			pBaseL.Info("[Payment] Close service...")
 			return
 		}
 	}
 }
 
 func handleClient(ctx context.Context, conn transport.Connection, logger transport.LogSink) {
-	// Provider und leere Addresse, da dieser Peer passiv erzeugt wurde
+	// Provider and empty address, because this peer was passively created.
 	node := rpc.NewNode(conn, nil, "", logger)
 
-	// 3. Handler registrieren: Was können andere bei uns aufrufen?
+	// 3. register your handler: What information can others access from us?
 	node.Register("payment.process", func(ctx context.Context, p json.RawMessage) (any, error) {
 		var orderID string
 		json.Unmarshal(p, &orderID)
-		node.Log.With("OrderID", orderID).Info("[Payment] 💳 Verarbeite Zahlung")
+		node.Log.With("OrderID", orderID).Info("[Payment] 💳 Process payment")
 
-		// Simuliere Erfolg
+		// simuliere success
 		return "Payment_Success_ID_9988", nil
 	})
 
-	// 4. Eigene Logik: Wir können den Order-Service auch aktiv benachrichtigen
+	// 4. own logic: We can also actively notify the order service.
 	go func() {
-		// Wir warten kurz und schicken dann eine Bestätigung (Notify)
-		logger.Info("[Payment] Schicke Status-Update an Order-Service...")
-		err := node.Notify(ctx, "order.update", "Zahlung verbucht")
+		// we'll wait a moment and then send a confirmation (notify).
+		logger.Info("[Payment] Send status update to order service...")
+		err := node.Notify(ctx, "order.update", "Payment recorded")
 		if err != nil {
-			logger.With("Error", err).Error("[Payment] Notify Fehler")
+			logger.With("Error", err).Error("[Payment] Notify Error")
 		}
 	}()
 
-	// 5. Den Peer am Leben erhalten
+	// 5. keeping the node alive
 	if err := node.Listen(ctx); err != nil {
-		logger.With("Error", err).Error("[Payment] Verbindung zu Client verloren")
+		logger.With("Error", err).Error("[Payment] Connection to client lost")
 	}
 }

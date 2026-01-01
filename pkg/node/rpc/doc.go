@@ -1,20 +1,20 @@
-// Copyright 2025 Georg Hagn
+// Copyright 2026 Georg Hagn
 // SPDX-License-Identifier: Apache-2.0
 
 /*
-Package rpc implementiert ein bidirektionales JSON-RPC 2.0 Protokoll über abstrakte Verbindungen.
+The rpc package implements a bidirectional JSON-RPC 2.0 protocol using abstract connections.
 
-Im Gegensatz zu klassischem Client-Server-RPC erlaubt dieses Paket eine symmetrische
-Kommunikation (Peer-to-Peer). Jeder Endpunkt kann sowohl Methoden registrieren (Server-Rolle)
-als auch Methoden beim Partner aufrufen (Client-Rolle).
+Unlike traditional client-server RPC, this package allows symmetrical
+peer-to-peer communication. Each endpoint can both register methods (server role)
+and call methods on the partner (client role).
 
-Hauptmerkmale:
-  - Unterstützung für Call (Request/Response) und Notify (Fire-and-Forget).
-  - Robuste Fehlerbehandlung mit standardisierten JSON-RPC Error-Codes.
-  - Generische Bind-Funktion für typsicheres Unmarshaling ohne Reflection.
-  - Unterstützung für automatische Reconnect-Logik bei Verbindungsabbruch.
+Key features:
+- Support for call (request/response) and notify (fire-and-forget).
+- Robust error handling with standardized JSON-RPC error codes.
+- Generic bind function for type-safe unmarshaling without reflection.
+- Support for automatic reconnect logic on connection failure.
 
-Beispiel für die Registrierung eines Handlers:
+Example of registering a handler:
 
 	peer.Register("sum", func(ctx context.Context, params json.RawMessage) (any, error) {
 	    vals, _ := rpc.Bind[[]int](params)

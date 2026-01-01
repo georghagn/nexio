@@ -13,9 +13,9 @@ type Adapter struct {
 	inner *gsflog.Logger
 }
 
-// Wrap macht aus einem gsflog.Logger einen transport.LogSink.
+// Wrap turns a gsflog.Logger into a transport.LogSink.
 func Wrap(g gsflog.LogSink) transport.LogSink {
-	// Hier machen wir die Assertion intern einmal zentral
+	// Here we will handle the assertion internally, centrally.
 	return &Adapter{inner: g.(*gsflog.Logger)}
 }
 
@@ -24,15 +24,15 @@ func (a *Adapter) Info(msg string)  { a.inner.Info(msg) }
 func (a *Adapter) Warn(msg string)  { a.inner.Warn(msg) }
 func (a *Adapter) Error(msg string) { a.inner.Error(msg) }
 
-// With sorgt dafür, dass der Kontext erhalten bleibt und das Ergebnis
-// wieder das korrekte gsf-suite Interface erfüllt.
+// With ensures that the context is preserved and the result
+// again meets the correct gsf-suite interface.
 func (a *Adapter) With(key string, value any) transport.LogSink {
 	return &Adapter{
 		inner: a.inner.With(key, value).(*gsflog.Logger),
 	}
 }
 
-// SetLevel erlaubt das Ändern des Log-Levels über das Interface.
+// SetLevel allows you to change the log level via the interface.
 func (a *Adapter) SetLevel(l int) {
 	a.inner.SetLevel(gsflog.Level(l))
 }

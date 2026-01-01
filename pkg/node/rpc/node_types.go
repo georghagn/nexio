@@ -1,4 +1,4 @@
-// Copyright 2025 Georg Hagn
+// Copyright 2026 Georg Hagn
 // SPDX-License-Identifier: Apache-2.0
 
 package rpc
@@ -39,13 +39,13 @@ const (
 	ErrCodeInvalidParams   = -32602
 	ErrCodeInternalError   = -32603
 
-	// Custom App Error Codes (Beispiel)
+	// Custom App Error Codes (Example)
 	ErrCodeUnauthorized = 401
 	ErrCodeForbidden    = 403
 )
 
 // --- Error Messages Map ---
-// Hier definieren wir den Standard-Text zu jedem Code
+// Here we define the default text for each code.
 var stdErrorMessages = map[int]string{
 	ErrCodeParseError:      "Parse error",
 	ErrConnectionLostError: "Connection lost during request",
@@ -58,11 +58,11 @@ var stdErrorMessages = map[int]string{
 	ErrCodeForbidden:       "Forbidden",
 }
 
-// Hilfsfunktion zur Erstellung von Fehlern
+// Helper function for creating errors
 func NewRPCError(code int, data any) *RPCError {
 	msg, ok := stdErrorMessages[code]
 	if !ok {
-		msg = "Server error" // Fallback, falls Code unbekannt
+		msg = "Server error" // Fallback, in case of code is unknown
 	}
 	rpcErr := &RPCError{
 		Code:    code,
@@ -70,7 +70,7 @@ func NewRPCError(code int, data any) *RPCError {
 	}
 
 	if data != nil {
-		// Wir serialisieren die Zusatzdaten direkt hier in RawMessage
+		// We serialize the additional data directly here in RawMessage
 		if b, err := json.Marshal(data); err == nil {
 			rpcErr.Data = b
 		}

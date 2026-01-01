@@ -109,17 +109,19 @@ If multiple files need rotation, the scheduler should create **multiple jobs**, 
 
 ---
 
-### In-Process Locking Only
 
-The rotator uses **in-process synchronization** (`sync.Mutex`) only.
+### Rotator has 2 different Locking strategies:
 
-It does **not** implement:
+####  1) In-Process Locking Only (default)
+
+The default part of rotator uses **in-process synchronization** (`sync.Mutex`).
+This in-process does **not** implement:
 
 * lock files (`.lock`)
 * OS-level advisory locks
 * network-wide or distributed locking
 
-#### Rationale
+**Rationale**
 
 While cross-process locking (e.g. via lock files) is sometimes useful, it introduces:
 
@@ -129,15 +131,12 @@ While cross-process locking (e.g. via lock files) is sometimes useful, it introd
 
 GSF deliberately avoids this complexity.
 
-**If multiple processes write to the same log file, this is considered a deployment concern**, not a library concern.
+*If multiple processes write to the same log file, this is considered a deployment concern, not a library concern.*
 
----
+**File Descriptor Handling**
 
-### File Descriptor Handling
-
-The rotator keeps the file **open** during normal operation.
-
-It does **not** use a workflow like:
+The rotator keeps the file *open* during normal operation.
+It does *not* use a workflow like:
 
 ```
 open → write → close (per write)
@@ -155,11 +154,10 @@ Instead:
 * kept open
 * closed and reopened only during rotation or explicit reopen
 
----
 
-### Reopen Mechanism
+**Reopen Mechanism**
 
-A `Reopen()` operation exists to support scenarios like:
+With the `ReopenableWriter` a `Reopen()` operation exists to support scenarios like:
 
 * external log rotation (e.g. `logrotate`)
 * signal-based reopen (`SIGHUP`)
@@ -170,6 +168,22 @@ This keeps responsibilities clean:
 
 * **Rotator:** file lifecycle
 * **Scheduler / Signals:** timing & orchestration
+
+####  2) External locking synchronizationprocess 
+
+This part of rotator was designed for maximum data security and process independence. It follows the principle of "atomic writes" and a strict file locking logic.
+
+**Features:**
+- *Lock file synchronization:* Before each write operation, a `.LOCK` file is checked or created. This prevents data corruption if multiple instances or external tools access the logs simultaneously.
+- *Stateless Writing (Open-Write-Close):* The log file does not remain open permanently. Each write operation follows the following cycle:
+  1. Check the lock (`.LOCK`).
+  2. Open file in append-mode.
+  3. Write the data.
+  4. Close the file and unlock it.
+- *Size based rotation:* Once a defined file size is exceeded, the file is rotated. The current file is archived (timestamp suffix) and a new log file is started.
+- *Resource conservation:* Closing the file immediately after writing prevents file descriptor leaks and increases compatibility with file system backups (e.g., rsync).
+
+With the `LockWriter` rotator and logger support this scenarios
 
 ---
 

@@ -10,26 +10,26 @@ import (
 )
 
 func TestPeerRPC(t *testing.T) {
-	// Erstelle einen Kontext, den wir explizit abbrechen können
+	// Create a context that we can explicitly cancel.
 	ctx, cancel := context.WithCancel(context.Background())
 
-	// t.Cleanup sorgt dafür, dass die Goroutine am Ende des Tests gestoppt wird
+	// t.Cleanup ensures that the goroutine is stopped at the end of the test.
 	t.Cleanup(func() {
 		cancel()
-		time.Sleep(5 * time.Millisecond) // Kleiner Puffer zum "Ausschwingen"
+		time.Sleep(5 * time.Millisecond) // Small buffer for "swinging off"
 	})
 
-	// 1. Zwei Channels für die bidirektionale Kommunikation
+	// 1. Two channels for bidirectional communication
 	ch1 := make(chan []byte, 10)
 	ch2 := make(chan []byte, 10)
 
-	// 2. Zwei verbundene Transport-Enden erstellen
+	// 2.Create two connected transport ends
 	clientConn := &transport.MemConnection{In: ch1, Out: ch2}
 	serverConn := &transport.MemConnection{In: ch2, Out: ch1}
 
 	serverNode := NewNode(serverConn, nil, "", nil)
 
-	// 3. Server-Loop im Hintergrund starten
+	// 3.Start server loop in background
 	go serverNode.Listen(ctx)
 
 	// 4. Test-Case: Ping
@@ -45,10 +45,10 @@ func TestPeerRPC(t *testing.T) {
 		}
 		reqBytes, _ := json.Marshal(req)
 
-		// Request senden
+		// send request
 		clientConn.Send(ctx, reqBytes)
 
-		// Antwort empfangen
+		// receive answer
 		respBytes, err := clientConn.Receive(ctx)
 		if err != nil {
 			t.Fatalf("Failed to receive: %v", err)
@@ -90,7 +90,7 @@ func TestPeerRPC(t *testing.T) {
 
 func TestBidirectionalCall(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel() // Hier reicht defer, da der Test keine Sub-Tests hat
+	defer cancel() // defer is sufficient here, as the test has no sub-tests.
 
 	ch1 := make(chan []byte, 10)
 	ch2 := make(chan []byte, 10)
@@ -100,15 +100,15 @@ func TestBidirectionalCall(t *testing.T) {
 	serverNode := NewNode(serverConn, nil, "", nil)
 	clientNode := NewNode(clientConn, nil, "", nil)
 
-	// WICHTIG: Der Server muss registrieren, damit er auf den Call des Clients antworten kann
+	// IMPORTANT: The server must register in order to respond to the client's call.
 	serverNode.Register("ping", func(ctx context.Context, p json.RawMessage) (any, error) {
 		return "pong", nil
 	})
-	//ctx := context.Background()
+
 	go serverNode.Listen(ctx)
 	go clientNode.Listen(ctx)
 
-	// Der Client ruft den Server auf
+	// The client calls the server.
 	res, err := clientNode.Call(ctx, "ping", nil)
 
 	if err != nil {

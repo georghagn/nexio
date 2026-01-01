@@ -1,4 +1,4 @@
-// Copyright 2025 Georg Hagn
+// Copyright 2026 Georg Hagn
 // SPDX-License-Identifier: Apache-2.0
 
 package transport
@@ -36,12 +36,12 @@ func (m *MemConnection) Receive(ctx context.Context) ([]byte, error) {
 }
 
 func (m *MemConnection) Close(reason string) error {
-	// In einem echten Test würde man hier vorsichtig sein,
-	// um "close of closed channel" zu vermeiden.
+	// In a real test, one would be cautious here,
+	// to avoid "close of closed channel".
 	return nil
 }
 
-// NewMemPair erzeugt zwei fertig verbundene Endpunkte
+// NewMemPair creates two fully connected endpoints.
 func NewMemPair() (*MemConnection, *MemConnection) {
 	aToB := make(chan []byte, 10)
 	bToA := make(chan []byte, 10)
