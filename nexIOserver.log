@@ -1,0 +1,101 @@
+{"level":"INFO ","msg":"Server startet auf :5090","time":"2025-12-26T16:42:10+01:00"}
+{"component":"nexIOserver","level":"INFO ","msg":"NexIO Hub gestartet","time":"2025-12-26T16:42:10+01:00"}
+{"level":"INFO ","msg":"Simuliere Druckauftrag...","time":"2025-12-26T16:42:20+01:00"}
+{"level":"INFO ","msg":"Server sauber beendet","time":"2025-12-26T16:43:51+01:00"}
+{"component":"nexIOserver","level":"INFO ","msg":"NexIO Hub gestartet","time":"2025-12-26T16:46:26+01:00"}
+{"level":"INFO ","msg":"Server startet auf :5090","time":"2025-12-26T16:46:26+01:00"}
+{"Message":"{\"jsonrpc\":\"2.0\",\"method\":\"auth.login\",\"params\":{\"password\":\"default-secret\",\"username\":\"admin\"},\"id\":\"1\"}\n","component":"nexIOserver","ip":"127.0.0.1:55120","level":"DEBUG","msg":"RX Raw Message","time":"2025-12-26T16:46:29+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:55120","level":"DEBUG","msg":"Executing Handler","r.Method":"auth.login","time":"2025-12-26T16:46:29+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:55120","level":"DEBUG","msg":"Handler finished","r.Method":"auth.login","time":"2025-12-26T16:46:29+01:00","took":"31.511µs"}
+{"component":"nexIOserver","ip":"127.0.0.1:55120","level":"WARN ","msg":"Handler returned Error","rpcErr.Message":"Unauthorized","time":"2025-12-26T16:46:29+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:55120","level":"DEBUG","msg":"WebSocket closed normally","time":"2025-12-26T16:46:29+01:00"}
+{"Message":"{\"jsonrpc\":\"2.0\",\"method\":\"auth.login\",\"params\":{\"password\":\"default-secret\",\"username\":\"admin\"},\"id\":\"2\"}\n","component":"nexIOserver","ip":"127.0.0.1:55134","level":"DEBUG","msg":"RX Raw Message","time":"2025-12-26T16:46:30+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:55134","level":"DEBUG","msg":"Executing Handler","r.Method":"auth.login","time":"2025-12-26T16:46:30+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:55134","level":"DEBUG","msg":"Handler finished","r.Method":"auth.login","time":"2025-12-26T16:46:30+01:00","took":"5.42µs"}
+{"component":"nexIOserver","ip":"127.0.0.1:55134","level":"WARN ","msg":"Handler returned Error","rpcErr.Message":"Unauthorized","time":"2025-12-26T16:46:30+01:00"}
+{"Message":"{\"jsonrpc\":\"2.0\",\"method\":\"auth.login\",\"params\":{\"password\":\"default-secret\",\"username\":\"admin\"},\"id\":\"3\"}\n","component":"nexIOserver","ip":"127.0.0.1:37378","level":"DEBUG","msg":"RX Raw Message","time":"2025-12-26T16:46:32+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:37378","level":"DEBUG","msg":"Executing Handler","r.Method":"auth.login","time":"2025-12-26T16:46:32+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:37378","level":"DEBUG","msg":"Handler finished","r.Method":"auth.login","time":"2025-12-26T16:46:32+01:00","took":"5.75µs"}
+{"component":"nexIOserver","ip":"127.0.0.1:37378","level":"WARN ","msg":"Handler returned Error","rpcErr.Message":"Unauthorized","time":"2025-12-26T16:46:32+01:00"}
+{"level":"INFO ","msg":"Simuliere Druckauftrag...","time":"2025-12-26T16:46:36+01:00"}
+{"Message":"{\"jsonrpc\":\"2.0\",\"method\":\"auth.login\",\"params\":{\"password\":\"default-secret\",\"username\":\"admin\"},\"id\":\"4\"}\n","component":"nexIOserver","ip":"127.0.0.1:37388","level":"DEBUG","msg":"RX Raw Message","time":"2025-12-26T16:46:36+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:37388","level":"DEBUG","msg":"Executing Handler","r.Method":"auth.login","time":"2025-12-26T16:46:36+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:37388","level":"DEBUG","msg":"Handler finished","r.Method":"auth.login","time":"2025-12-26T16:46:36+01:00","took":"5.76µs"}
+{"component":"nexIOserver","ip":"127.0.0.1:37388","level":"WARN ","msg":"Handler returned Error","rpcErr.Message":"Unauthorized","time":"2025-12-26T16:46:36+01:00"}
+{"Message":"{\"jsonrpc\":\"2.0\",\"method\":\"auth.login\",\"params\":{\"password\":\"default-secret\",\"username\":\"admin\"},\"id\":\"5\"}\n","component":"nexIOserver","ip":"127.0.0.1:57916","level":"DEBUG","msg":"RX Raw Message","time":"2025-12-26T16:46:44+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:57916","level":"DEBUG","msg":"Executing Handler","r.Method":"auth.login","time":"2025-12-26T16:46:44+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:57916","level":"DEBUG","msg":"Handler finished","r.Method":"auth.login","time":"2025-12-26T16:46:44+01:00","took":"6.02µs"}
+{"component":"nexIOserver","ip":"127.0.0.1:57916","level":"WARN ","msg":"Handler returned Error","rpcErr.Message":"Unauthorized","time":"2025-12-26T16:46:44+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:57916","level":"DEBUG","msg":"WebSocket closed normally","time":"2025-12-26T16:46:44+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:55134","level":"DEBUG","msg":"WebSocket closed normally","time":"2025-12-26T16:46:44+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:37378","level":"DEBUG","msg":"WebSocket closed normally","time":"2025-12-26T16:46:44+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:37388","level":"DEBUG","msg":"WebSocket closed normally","time":"2025-12-26T16:46:44+01:00"}
+{"level":"INFO ","msg":"Server sauber beendet","time":"2025-12-26T16:47:06+01:00"}
+{"component":"nexIOserver","level":"INFO ","msg":"NexIO Hub gestartet","time":"2025-12-26T16:57:19+01:00"}
+{"level":"INFO ","msg":"Server startet auf :5090","time":"2025-12-26T16:57:19+01:00"}
+{"level":"INFO ","msg":"Simuliere Druckauftrag...","time":"2025-12-26T16:57:29+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:51900","level":"WARN ","msg":"Handler returned Error","rpcErr.Message":"Unauthorized","time":"2025-12-26T16:57:34+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:51910","level":"WARN ","msg":"Handler returned Error","rpcErr.Message":"Unauthorized","time":"2025-12-26T16:57:35+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:51926","level":"WARN ","msg":"Handler returned Error","rpcErr.Message":"Unauthorized","time":"2025-12-26T16:57:37+01:00"}
+{"level":"INFO ","msg":"Server sauber beendet","time":"2025-12-26T16:58:53+01:00"}
+{"component":"nexIOserver","level":"INFO ","msg":"NexIO Hub gestartet","time":"2025-12-26T17:00:51+01:00"}
+{"level":"INFO ","msg":"Server startet auf :5090","time":"2025-12-26T17:00:51+01:00"}
+{"level":"INFO ","msg":"Simuliere Druckauftrag...","time":"2025-12-26T17:01:01+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:41374","level":"WARN ","msg":"Handler returned Error","rpcErr.Message":"Unauthorized","time":"2025-12-26T17:01:04+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:41382","level":"WARN ","msg":"Handler returned Error","rpcErr.Message":"Unauthorized","time":"2025-12-26T17:01:05+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:41384","level":"WARN ","msg":"Handler returned Error","rpcErr.Message":"Unauthorized","time":"2025-12-26T17:01:07+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:41388","level":"WARN ","msg":"Handler returned Error","rpcErr.Message":"Unauthorized","time":"2025-12-26T17:01:15+01:00"}
+{"level":"INFO ","msg":"Server sauber beendet","time":"2025-12-26T17:01:15+01:00"}
+{"level":"INFO ","msg":"Server startet auf :5090","time":"2025-12-26T17:02:39+01:00"}
+{"component":"nexIOserver","level":"INFO ","msg":"NexIO Hub gestartet","time":"2025-12-26T17:02:39+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:50276","level":"WARN ","msg":"Handler returned Error","rpcErr.Message":"Unauthorized","time":"2025-12-26T17:02:46+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:50292","level":"WARN ","msg":"Handler returned Error","rpcErr.Message":"Unauthorized","time":"2025-12-26T17:02:47+01:00"}
+{"level":"INFO ","msg":"Simuliere Druckauftrag...","time":"2025-12-26T17:02:49+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:50302","level":"WARN ","msg":"Handler returned Error","rpcErr.Message":"Unauthorized","time":"2025-12-26T17:02:49+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:41308","level":"WARN ","msg":"Handler returned Error","rpcErr.Message":"Unauthorized","time":"2025-12-26T17:02:53+01:00"}
+{"level":"INFO ","msg":"Server sauber beendet","time":"2025-12-26T17:02:54+01:00"}
+{"component":"nexIOserver","level":"INFO ","msg":"NexIO Hub gestartet","time":"2025-12-26T17:05:12+01:00"}
+{"level":"INFO ","msg":"Server startet auf :5090","time":"2025-12-26T17:05:12+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:48230","level":"WARN ","msg":"Handler returned Error","rpcErr.Message":"Unauthorized","time":"2025-12-26T17:05:15+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:48244","level":"WARN ","msg":"Handler returned Error","rpcErr.Message":"Unauthorized","time":"2025-12-26T17:05:16+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:48256","level":"WARN ","msg":"Handler returned Error","rpcErr.Message":"Unauthorized","time":"2025-12-26T17:05:18+01:00"}
+{"level":"INFO ","msg":"Server sauber beendet","time":"2025-12-26T17:05:19+01:00"}
+{"level":"INFO ","msg":"Server startet auf :5090","time":"2025-12-26T17:06:15+01:00"}
+{"component":"nexIOserver","level":"INFO ","msg":"NexIO Hub gestartet","time":"2025-12-26T17:06:15+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:35706","level":"WARN ","msg":"Handler returned Error","rpcErr.Message":"Unauthorized","time":"2025-12-26T17:06:18+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:35720","level":"WARN ","msg":"Handler returned Error","rpcErr.Message":"Unauthorized","time":"2025-12-26T17:06:19+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:35722","level":"WARN ","msg":"Handler returned Error","rpcErr.Message":"Unauthorized","time":"2025-12-26T17:06:21+01:00"}
+{"level":"INFO ","msg":"Simuliere Druckauftrag...","time":"2025-12-26T17:06:25+01:00"}
+{"level":"INFO ","msg":"Server sauber beendet","time":"2025-12-26T17:06:25+01:00"}
+{"level":"INFO ","msg":"Server startet auf :5090","time":"2025-12-26T17:08:05+01:00"}
+{"component":"nexIOserver","level":"INFO ","msg":"NexIO Hub gestartet","time":"2025-12-26T17:08:05+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:35660","level":"WARN ","msg":"Handler returned Error","rpcErr.Message":"Unauthorized","time":"2025-12-26T17:08:08+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:35666","level":"WARN ","msg":"Handler returned Error","rpcErr.Message":"Unauthorized","time":"2025-12-26T17:08:08+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:35676","level":"WARN ","msg":"Handler returned Error","rpcErr.Message":"Unauthorized","time":"2025-12-26T17:08:09+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:35680","level":"WARN ","msg":"Handler returned Error","rpcErr.Message":"Unauthorized","time":"2025-12-26T17:08:11+01:00"}
+{"level":"INFO ","msg":"Server sauber beendet","time":"2025-12-26T17:08:14+01:00"}
+{"component":"nexIOserver","level":"INFO ","msg":"NexIO Hub gestartet","time":"2025-12-26T17:12:06+01:00"}
+{"level":"INFO ","msg":"Server startet auf :5090","time":"2025-12-26T17:12:06+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:45508","level":"WARN ","msg":"Handler returned Error","rpcErr.Message":"Unauthorized","time":"2025-12-26T17:12:10+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:45510","level":"WARN ","msg":"Handler returned Error","rpcErr.Message":"Unauthorized","time":"2025-12-26T17:12:11+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:53922","level":"WARN ","msg":"Handler returned Error","rpcErr.Message":"Unauthorized","time":"2025-12-26T17:12:13+01:00"}
+{"level":"INFO ","msg":"Simuliere Druckauftrag...","time":"2025-12-26T17:12:16+01:00"}
+{"component":"nexIOserver","ip":"127.0.0.1:53926","level":"WARN ","msg":"Handler returned Error","rpcErr.Message":"Unauthorized","time":"2025-12-26T17:12:17+01:00"}
+{"level":"INFO ","msg":"Server sauber beendet","time":"2025-12-26T17:12:17+01:00"}
+{"component":"nexIOserver","level":"INFO ","msg":"NexIO Hub gestartet","time":"2025-12-26T17:17:42+01:00"}
+{"level":"INFO ","msg":"Server startet auf :5090","time":"2025-12-26T17:17:42+01:00"}
+{"component":"nexIOserver","level":"INFO ","msg":"User bound to session","time":"2025-12-26T17:17:46+01:00","user_id":"admin"}
+{"level":"INFO ","msg":"Simuliere Druckauftrag...","time":"2025-12-26T17:17:52+01:00"}
+{"level":"INFO ","msg":"Server sauber beendet","time":"2025-12-26T17:17:57+01:00"}
+{"level":"INFO ","msg":"Server startet auf :5090","time":"2025-12-27T18:15:32+01:00"}
+{"level":"INFO ","msg":"NexIO Hub gestartet","time":"2025-12-27T18:15:32+01:00"}
+{"level":"INFO ","msg":"Simuliere Druckauftrag...","time":"2025-12-27T18:15:42+01:00"}
+{"level":"INFO ","msg":"Server startet auf :5090","time":"2025-12-27T18:23:10+01:00"}
+{"level":"INFO ","msg":"NexIO Hub gestartet","time":"2025-12-27T18:23:10+01:00"}
+{"level":"INFO ","msg":"Server startet auf :5090","time":"2025-12-27T18:25:18+01:00"}
+{"level":"INFO ","msg":"NexIO Hub gestartet","time":"2025-12-27T18:25:18+01:00"}
+{"level":"INFO ","msg":"Simuliere Druckauftrag...","time":"2025-12-27T18:25:28+01:00"}
+{"level":"INFO ","msg":"Server startet auf :5090","time":"2025-12-27T18:28:08+01:00"}
+{"level":"INFO ","msg":"NexIO Hub gestartet","time":"2025-12-27T18:28:08+01:00"}
+{"level":"INFO ","msg":"Simuliere Druckauftrag...","time":"2025-12-27T18:28:18+01:00"}
+{"level":"INFO ","msg":"Server sauber beendet","time":"2025-12-27T18:28:47+01:00"}

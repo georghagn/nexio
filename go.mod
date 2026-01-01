@@ -2,9 +2,8 @@ module github.com/georghagn/gsf-suite
 
 go 1.25.3
 
-require github.com/gorilla/websocket v1.5.3
-
 require (
+	github.com/coder/websocket v1.8.14 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
