@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/georghagn/nexio/pkg/adapter"
-	"github.com/georghagn/nexio/pkg/gsflog"
+	"github.com/georghagn/nexio/pkg/nexlog"
 	"github.com/georghagn/nexio/pkg/node/rpc"
 	"github.com/georghagn/nexio/pkg/node/transport"
 )
@@ -20,8 +20,8 @@ func main() {
 	defer stop()
 
 	//  initialize provider with logger
-	plogger := gsflog.NewDefaultConsole()
-	plogger.SetLevel(gsflog.LevelInfo)
+	plogger := nexlog.NewDefaultConsole()
+	plogger.SetLevel(nexlog.LevelInfo)
 	pBaseL := adapter.Wrap(plogger.With("order", "Order_#42"))
 
 	provider := transport.NewWSProvider(pBaseL)

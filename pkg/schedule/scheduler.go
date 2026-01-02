@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// Logger Interface: So that the scheduler does not depend on the specific gsflog.
+// Logger Interface: So that the scheduler does not depend on the specific nexlog.
 type Logger interface {
 	Error(format string, args ...interface{})
 	Info(format string, args ...interface{})

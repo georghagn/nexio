@@ -1,8 +1,8 @@
 module order-service
 
-go 1.25.3
+go 1.23
 
-require github.com/georghagn/nexio v0.0.0-00010101000000-000000000000
+require github.com/georghagn/nexio v1.0.0
 
 replace github.com/georghagn/nexio => ../../../..
 

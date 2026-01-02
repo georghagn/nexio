@@ -9,158 +9,109 @@
 
 <sup>***GSF*** steht für ***Go Small Frameworks*** — eine Sammlung von minimalistischen Tools für robuste Anwendungen.</sup>
 
-### Überblick
+### Übersicht
 
-GSF (Go Small Frameworks) ist eine Sammlung kleiner, unabhängiger Go-Module zum Bau **einfacher Services**.
+**nexIO** bietet eine Auswahl an minimalen Infrastruktur-Bausteinen für Microservices und serviceorientierte Systeme. Der Fokus liegt auf **Klarheit, geringen Abhängigkeiten und Komponierbarkeit** – ganz nach der pragmatischen Philosophie der *"90%-Lösung"*.
 
-Der Fokus liegt auf **Klarheit, wenigen Abhängigkeiten und expliziter Zusammensetzung**, nach dem Prinzip einer pragmatischen *90%-Lösung*.
+Die Module sind bewusst fokussiert:
 
-Dieses Repository (`nexIO`) enthält die Go-Implementierung von GSF.
+* Lösen jeweils ein spezifisches Problem gründlich.
+* Unabhängige Nutzung (kein Zwang zu monolithischen Strukturen).
+* Bevorzugen explizite Komposition gegenüber "magischen" Abstraktionen.
+* Minimale externe Abhängigkeiten.
 
 ---
 
-### Designprinzipien
+### Quick Start: Ein Node in 3 Zeilen
 
-- **Einfachheit zuerst** – kleine APIs, klare Verantwortung
-- **90%-Lösungen** – praktikabel statt perfekt
-- **Wenig Abhängigkeiten** – Standardbibliothek bevorzugt
-- **Lose Kopplung** – Kommunikation über Interfaces
-- **Sprachunabhängige Architektur** – geeignet für Polyglot-Systeme
+```go
+logger := nexlog.Wrap(nexlog.NewDefaultConsole())
+provider := transport.NewWSProvider(logger)
+node := rpc.NewNode(nil, provider, "ws://localhost:8080/ws", logger)
+go node.Listen(ctx)
 
+```
 
+---
+
+### Design-Prinzipien
+
+* **Einfachheit zuerst** – kleine APIs, klare Verantwortlichkeiten.
+* **90%-Lösungen** – praktische, stabile Lösungen vor theoretischer Perfektion.
+* **Lose Kopplung** – Module kommunizieren über saubere Interfaces.
+* **Sprachunabhängige Architektur** – Konzepte, die auch für polyglotte Systeme geeignet sind.
+
+---
 
 ### Module
 
-Bitte beachten Sie auch die README in den jeweiligen Modulen.
+* **[node](https://www.google.com/search?q=./pkg/node)**: Resiliente P2P RPC-Kommunikation.
+* **[nexlog](https://www.google.com/search?q=./pkg/nexlog)**: Strukturiertes Logging mit Adapter-Unterstützung.
+* **[rotate](https://www.google.com/search?q=./pkg/nexlog/rotate)**: Sicherer Datei-Rotator mit `.LOCK`-Synchronisierung.
+* **[schedule](https://www.google.com/search?q=./pkg/schedule)**: Zuverlässige Aufgabenplanung (Scheduling).
+
+#### nexIOnode (`pkg/node`)
+
+Das Herzstück der bidirektionalen Kommunikation. Es bricht mit dem klassischen Client-Server-Paradigma und ersetzt es durch eine **symmetrische Peer-Architektur**.
+
+* **Symmetrie:** Sobald die Verbindung steht, kann jeder Node Methoden registrieren und gleichzeitig seinen Partner als Client aufrufen.
+* **Rollenunabhängig:** Während Verbindungen als Client/Server starten, agieren nach dem Aufbau alle Teilnehmer als gleichberechtigte Peers. Dies wird im Beispiel `cmd/node/gsfNodesExamples` verdeutlicht, wo ein "Payment Service" und mehrere "Order Services" bidirektional interagieren.
+* **Resilienz-Engine:** Integrierter Zustandsautomat mit exponentiellem Backoff für transparente Wiederverbindungen.
+* **Typsicherheit:** Nutzt Go Generics (`Bind[T]`), um JSON-RPC-Parameter sicher in native Go-Strukturen zu überführen.
+
+#### nexlog & rotate (`pkg/nexlog` & `pkg/nexlog/rotate`)
+
+Ein strukturiertes Logging-System, optimiert für den Langzeitbetrieb.
+
+* **Interface-Abstraktion:** Entkoppelt über `LogSink`, was die Nutzung in jedem Modul ohne harte Abhängigkeiten ermöglicht.
+* **Atomare Rotation:** Robuste Dateirotation mit einem `.LOCK`-Mechanismus.
+* **Sichere Operationen:** Jedes Log-Ereignis folgt einem **Open -> Write -> Close** Zyklus, was die Integrität auch bei Systemabstürzen garantiert.
+* **Kontextuelles Tracing:** Unterstützt die Anreicherung von Feldern via `With(key, value)` für verteiltes Tracing.
+
+#### nexIOschedule (`pkg/schedule`)
+
+Ein präziser, "panic-sicherer" Scheduler für wiederkehrende Aufgaben.
+
+* **Interface-gesteuert:** Führen Sie jede beliebige Go-Funktion über ein einfaches Task-Interface aus.
+* **Konkurrenz-sicher:** Entwickelt, um hunderte parallele Jobs zu verwalten.
+* **Fehlertoleranz:** Fehlgeschlagene Jobs werden mit vollem Kontext über das integrierte `LogSink` protokolliert.
 
 ---
 
-#### gsfNode (pkg/node)
+### Kompositions-Modell
 
-Das Herzstück der bidirektionalen Kommunikation. Es bricht das klassische Client-Server-Paradigma auf und ersetzt es durch eine symmetrische Peer-Architektur.
+nexIO-Module sind für die explizite Komposition konzipiert:
 
-* **Symmetrie:** Jeder Node kann Methoden registrieren und gleichzeitig als Client beim Partner Anfragen stellen.
-* **Resilienz-Engine:** Ein integrierter Zustandsautomat überwacht die Verbindung und nutzt einen exponentiellen Backoff für die Wiederverbindung, ohne die laufende Applikationslogik zu blockieren.
-* **Typ-Sicherheit:** Durch Go Generics (`Bind[T]`) werden JSON-RPC Parameter sicher in native Go-Strukturen überführt.
+* `nexlog` schreibt in einen `io.Writer`.
+* `rotate.Writer` implementiert `io.Writer`.
+* `schedule` kann Wartungsaufgaben wie die Log-Rotation auslösen.
 
----
-
-#### nexIOlog & nexIOlog/rotate (pkg/gsflog)
-
-Ein hochperformantes, strukturiertes Logging-System, das für den Langzeitbetrieb in Microservices optimiert wurde.
-
-* **Interface-Abstraktion:** Über das `LogSink`-Interface entkoppelt, kann der Logger in jedem Modul (RPC, Transport, Scheduler) eingesetzt werden, ohne harte Abhängigkeiten zu erzeugen.
-* **Atomic Rotation:** Implementiert eine robuste Dateirotation mit `.LOCK`-Mechanismus. Jedes Log-Event wird atomar geschrieben (Open -> Write -> Close), was maximale Integrität auch bei Systemabstürzen garantiert.
-* **Contextual Logging:** Unterstützt das Anreichern von Log-Einträgen mit Kontext-Daten (`With`), um Tracing über verteilte Nodes hinweg zu ermöglichen.
-
-##### `gsflog`
-Ein minimaler Logger mit Loglevels und strukturierten Feldern.
-
-- Schreibt auf beliebige `io.Writer`
-- Keine Archivierung, Rotation oder Retention
-- Kein Ersatz für etablierte Logging-Frameworks
-
-Verantwortung:
-> Logmeldungen formatieren und ausgeben
-
-
-##### `rotate`
-Ein generisches Modul zur Dateirotation.
-
-- Arbeitet ausschließlich auf Dateien
-- Rotation nach Größe und/oder Zeit
-- Archivierungs- und Retention-Strategien austauschbar
-- Keine Abhängigkeit zu Logging
-
-Verantwortung:
-> Dateien nach Policies behandeln
-
----
-
-#### nexIOschedule (pkg/schedule)
-
-Ein präziser Zeitplaner für wiederkehrende Aufgaben innerhalb der gsf-Ökosystems.
-
-* **Interface-Driven:** Aufgaben werden über ein einfaches Interface definiert, was die Ausführung beliebiger Go-Funktionen ermöglicht.
-* **Concurrency-Safe:** Der Scheduler ist darauf ausgelegt, hunderte parallele Jobs zu verwalten, ohne die Echtzeitfähigkeit der RPC-Kommunikation zu beeinträchtigen.
-* **Fehlertoleranz:** Schlägt ein Job fehl, wird dies über das integrierte `gsfLog`-System mit vollem Kontext protokolliert.
-
-
-- Periodische Jobs (`Every`)
-- Einmalige Jobs (`At`)
-- Panic-sichere Ausführung
-- Optionales Logger-Interface
-
-Verantwortung:
-> Jobs zeitgesteuert ausführen
-
----
-
-### Zusammenspiel
-
-Die Module werden explizit zusammengesetzt:
-
-- `gsflog` schreibt auf ein `io.Writer`
-- `rotate.Writer` implementiert `io.Writer`
-- `schedule` kann Rotation oder Reopen auslösen
-
-Es gibt **keine festen Abhängigkeiten** zwischen den Modulen.
-Die Integration erfolgt auf Anwendungsebene.
+Die Integration findet in der Anwendungsschicht statt – **keine harten Abhängigkeiten** zwischen den Kernmodulen.
 
 ---
 
 ### Beispiele
 
+Das Verzeichnis `cmd/` enthält selbsterklärenden Code:
 
-
-Im Verzeichnis `cmd/` befinden sich lauffähige Beispiele:
-
-- `cmd/main.go` – vollständiges Beispiel
-- `cmd/rotate/main.go` – Rotation isoliert
-- `cmd/schedule/main.go` – Scheduler isoliert
-- `cmd/node/gsfNodeExample/.../main.go` – Zusammenspiel von 3 Nodes. Das README im `.../gsfNodeExample` gibt weitere Erläuterungen
-
-Die Beispiele dienen bewusst als ausführbare Dokumentation.
+* `cmd/node/gsfNodesExamples/` – **Die Peer-to-Peer Demo**: Interaktion eines Payment-Servers mit mehreren Order-Clients.
+* `cmd/rotate/main.go` – Eigenständige Datei-Rotation.
+* `cmd/schedule/main.go` – Nutzung des Schedulers.
 
 ---
 
-### Nicht-Ziele
-
-GSF stellt bewusst **keine** Plattform bereit für:
-
-- verteiltes Logging
-- Tracing
-- Metriken
-- Service Discovery
-- Konfigurations-Frameworks
-
-GSF ist Infrastruktur-Baustein, kein Framework.
-
----
-### Organisatorisches & Standards
+### Organisation & Standards
 
 * **Copyright:** © 2026 Georg Hagn.
-* **Namespace:** Alle Module folgen der Namenskonvention `github.com/georghagn/nexIO/pkg/...`.
-* **Clean Code:** Strikte Trennung von Transport-Logik (WebSockets) und Applikations-Logik (RPC).
+* **Namespace:** `github.com/georghagn/nexio/pkg/...`
+* **Lizenz:** Apache License, Version 2.0.
 
 ---
 
-### Lizenz
+## Mitwirken & Sicherheit
 
-Lizenziert unter der Apache License, Version 2.0.
+Beiträge sind willkommen! Bitte nutzen Sie GitHub Issues für Fehlerberichte oder Feature-Ideen.
+**Sicherheitsrelevante Themen** sollten nicht öffentlich diskutiert werden; bitte beachten Sie hierzu die `SECURITY.md`.
 
 ---
-
-## Contributing & Security
-
-Beiträge zur GSF Suite sind willkommen – sei es in Form von Bug-Reports,
-Verbesserungsvorschlägen oder Pull Requests.
-
-Bitte beachte dazu:
-- Hinweise zum Beitragen: siehe `CONTRIBUTING.md`
-- Verantwortungsvolle Meldung von Sicherheitslücken: siehe `SECURITY.md`
-
-Für normale Bugs oder Feature-Ideen nutze bitte GitHub Issues.
-Sicherheitsrelevante Themen sollten **nicht öffentlich** diskutiert werden.
-
 

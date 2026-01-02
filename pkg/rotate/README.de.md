@@ -6,7 +6,7 @@
 ## Überblick
 
 Der **GSF-Suite/Rotator** ist ein minimalistischer, robuster und thread-sicherer **File Rotator** für Go. 
-Er implementiert `io.WriteCloser` und kann nahtlos als Backend für Logger (z.B. stdlib `log`, `zap`, `zerolog` oder `gsflog`) verwendet werden. Er ist Teil der **GSF (Go Small Frameworks)** Suite, aber vollständig **standalone** nutzbar.
+Er implementiert `io.WriteCloser` und kann nahtlos als Backend für Logger (z.B. stdlib `log`, `zap`, `zerolog` oder `nexlog`) verwendet werden. Er ist Teil der **GSF (Go Small Frameworks)** Suite, aber vollständig **standalone** nutzbar.
 
 ## Features
 
@@ -107,7 +107,7 @@ Das Paket ist **Thread-Safe**. Du kannst denselben `*rotate.Writer` Instanz an m
 
 Typische Integrationen:
 
-- Logging über `gsflog`
+- Logging über `nexlog`
 - Zeitgesteuerte Rotation über `schedule`
 - Benutzerdefinierte Trigger
 

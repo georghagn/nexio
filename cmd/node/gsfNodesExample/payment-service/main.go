@@ -13,7 +13,7 @@ import (
 	"github.com/georghagn/nexio/pkg/adapter"
 	"github.com/georghagn/nexio/pkg/node/rpc"
 	"github.com/georghagn/nexio/pkg/node/transport"
-	"github.com/georghagn/nexio/pkg/gsflog"
+	"github.com/georghagn/nexio/pkg/nexlog"
 )
 
 func main() {
@@ -22,8 +22,8 @@ func main() {
 
 	// provider incl. Log initialize
 	// for demonstration purposes, equip the provider and node with different log levels.
-	plogger := gsflog.NewDefaultConsole()
-	plogger.SetLevel(gsflog.LevelInfo)
+	plogger := nexlog.NewDefaultConsole()
+	plogger.SetLevel(nexlog.LevelInfo)
 	pBaseL := adapter.Wrap(plogger.With("module", "payment-service"))
 
 	provider := transport.NewWSProvider(pBaseL)

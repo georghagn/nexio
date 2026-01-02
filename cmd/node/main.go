@@ -16,7 +16,7 @@ import (
 	"time"
 
 	"github.com/georghagn/nexio/pkg/adapter"
-	"github.com/georghagn/nexio/pkg/gsflog"
+	"github.com/georghagn/nexio/pkg/nexlog"
 	"github.com/georghagn/nexio/pkg/node/rpc"
 	"github.com/georghagn/nexio/pkg/node/transport"
 )
@@ -34,14 +34,14 @@ func main() {
 
 	// Provider incl. Log initialize
 	// zu DemoZwecken provider und node mit verschieden LogLevels ausrüsten
-	plogger := gsflog.NewDefaultConsole()
-	plogger.SetLevel(gsflog.LevelDebug)
+	plogger := nexlog.NewDefaultConsole()
+	plogger.SetLevel(nexlog.LevelDebug)
 	pBaseL := plogger.With("module", "transport.WSProvider")
 	provider := transport.NewWSProvider(adapter.Wrap(pBaseL))
 
 	outFile := "main.log"
-	nlogger := gsflog.NewDefault(&outFile)
-	nlogger.SetLevel(gsflog.LevelDebug)
+	nlogger := nexlog.NewDefault(&outFile)
+	nlogger.SetLevel(nexlog.LevelDebug)
 
 	//nBaseL := nlogger.With("module", "rpc.Node")
 	nodeLogger := adapter.Wrap(nlogger.With("module", "rpc.Node"))

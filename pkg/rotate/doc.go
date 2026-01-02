@@ -45,7 +45,7 @@ keeping in mind the platform-specific locking behaviors.
 
 Typical integrations:
 
-	Logging via `gsflog`
+	Logging via `nexlog`
 	Scheduled rotation via `schedule`
 	Custom triggers
 

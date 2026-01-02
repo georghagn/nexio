@@ -6,7 +6,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/georghagn/nexio/pkg/gsflog"
+	"github.com/georghagn/nexio/pkg/nexlog"
 	"github.com/georghagn/nexio/pkg/rotate"
 )
 
@@ -16,22 +16,22 @@ func main() {
 	//   - File:  Json-Formatter, rotating)
 
 	// 1. Setup Rotator
-	logFile := "gsflog-example-main.log"
+	logFile := "nexlog-example-main.log"
 	rotator := rotate.New(logFile, nil, nil, nil)
 	defer rotator.Close()
 
 	// 2. Setup Console Logger (Bunt, Text)
-	colouredTextFormatter := &gsflog.TextFormatter{UseColors: true}
-	consoleLoggerSink := gsflog.NewConsoleSink(gsflog.LevelDebug, colouredTextFormatter)
+	colouredTextFormatter := &nexlog.TextFormatter{UseColors: true}
+	consoleLoggerSink := nexlog.NewConsoleSink(nexlog.LevelDebug, colouredTextFormatter)
 
 	// 3. Setup Console FileLogger (Json)
-	jsonFormatter := &gsflog.JSONFormatter{}
-	fileLoggerSink := gsflog.NewFileSink(rotator, gsflog.LevelInfo, jsonFormatter)
+	jsonFormatter := &nexlog.JSONFormatter{}
+	fileLoggerSink := nexlog.NewFileSink(rotator, nexlog.LevelInfo, jsonFormatter)
 
 	// 4. Build Logger
 	// we don't use the Convenience Method: mainLogger := NewDefault(logFile)
 	// instead we use the hardcore way :-) Different LogLevels! for console and file
-	mainLogger := gsflog.New()
+	mainLogger := nexlog.New()
 	mainLogger.AddNamed("Console", consoleLoggerSink)
 	mainLogger.AddNamed("File", fileLoggerSink)
 
