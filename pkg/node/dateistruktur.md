@@ -1,46 +1,46 @@
-Sehr gerne. Hier ist die finale Übersicht deiner "Tiny P2P" Architektur als Referenz für dein Studium des Codes. Diese Struktur ist das Ergebnis unserer Reise von der komplexen Cobra-CLI hin zu einem sauberen, interface-basierten Go-Projekt.
+Here is an overview of `gsf-suite/node` architecture as a reference for code study.
 
-### Projektstruktur
+### Projektstructure
 
 ```text
-tiny-p2p/
+gsf-suite/
 ├── cmd/node/
-│   └── main.go           # Dispatcher: Steuert Lebenszyklus & Flags
+│   └── main.go           # Dispatcher: Controls lifecycle & flags
 ├── pkg/transport/
-│   ├── interface.go      # Die Abstraktion (Connection & Provider)
-│   ├── ws_transport.go   # Implementierung des Lese/Schreib-Interfaces
-│   └── ws_provider.go    # Logik für Dial (Client) & Listen (Server)
+│   ├── interface.go      # The abstraktion (Connection & Provider)
+│   ├── mem_transport.go  # Implementation of Read/Write-Interfaces for test-usage
+│   ├── ws_transport.go   # Implementation of Read/Write-Interfaces for production-usage
+│   └── ws_provider.go    # Logic for Dial (Client) & Listen (Server)
 └── pkg/rpc/
-    └── peer.go           # Das Herz: JSON-RPC Dispatcher & Request-Tracking
+│   ├── doc.go          # a little documentation
+│   ├── node_types.go   # global types
+│   ├── node.go         # The heart: JSON-RPC dispatcher & request tracking
+    └── README.md       
 
 ```
 
 ---
 
-### Kern-Komponenten & Zuständigkeiten
+### Core Components & Responsibilities
 
-| Komponente | Aufgabe | Fokus |
+| Component | Responsibility | focus |
 | --- | --- | --- |
-| **`Connection` (Interface)** | `Send`, `Receive`, `Close` | Byte-Übertragung (blind für Inhalt) |
-| **`WSProvider`** | Erzeugt Connections via WebSocket | Verbindungs-Management |
-| **`Peer` (RPC)** | Verknüpft `Connection` mit `JSON-RPC` | Logik & Symmetrie |
-| **`main.go`** | Verknüpft `Provider` mit `Peer` | Orchestrierung & Signale |
+| **`Connection` (Interface)** | `Send`, `Receive`, `Close` | Byte-Transport (blind to content) |
+| **`WSProvider`** | Creates Connections via WebSocket | Connections-Management |
+| **`Node` (RPC)** | Linking `Connection` with `JSON-RPC` | Logic & Symmetry |
+| **`main.go`** | Connects `Provider` with `Peer` | Orchestration & Signals |
 
 ---
 
-### Der Datenfluss (Visualisierung)
+### The data flow (visualization)
 
-1. **Transport-Layer:** Der `WSProvider` nimmt eine Verbindung an (Server) oder baut sie auf (Client).
-2. **Dispatcher:** Die Verbindung wird über den `found`-Channel an die `main.go` gemeldet.
-3. **Promotion:** In `handleNewPeer` wird die "dumme" Byte-Verbindung (`Connection`) zum "intelligenten" `rpc.Peer` befördert.
-4. **Lifecycle:** Der `context.Context` sorgt dafür, dass vom Server bis zum kleinsten RPC-Handler alles gleichzeitig stoppt, wenn du den Stecker ziehst.
+1. **Transport Layer:** The `WSProvider` accepts a connection (server) or establishes one (client).
+2. **Dispatcher:** The connection is reported to `main.go` via the `found` channel.
+3. **Promotion:** In `handleNewNode`, the "dumb" byte connection (`Connection`) is promoted to the "smart" `rpc.Node`.
+4. **Lifecycle:** The `context.Context` ensures that everything from the server to the smallest RPC handler stops simultaneously when you disconnect.
 
 ---
 
-### Ein kleiner Tipp zum Nachdenken (Reflektion):
+### A little tip for reflection:
 
-Achte beim Lesen besonders auf die **`pendingRequests` Map** in `peer.go`. Sie ist der Grund, warum du in einer bidirektionalen, asynchronen Welt (WebSockets) trotzdem so etwas Einfaches wie `result, err := peer.Call(...)` schreiben kannst. Das ist das "Magische" an diesem Design.
-
-Lass dir Zeit beim Verinnerlichen. Ich freue mich darauf, mit dir später die Geschäftslogik (Punkt A) anzugehen!
-
-**Soll ich dir noch ein kurzes Code-Snippet für einen "Mock"-Transport mitschicken, falls du lokal ohne Netzwerk experimentieren willst?**
+When reading, pay particular attention to the **`pendingRequests` map** in `node.go`. It's the reason why you can still write something as simple as `result, err := node.Call(...)` in a bidirectional, asynchronous world (WebSockets). That's the "magic" of this design.

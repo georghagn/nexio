@@ -122,18 +122,18 @@ func (node *Node) Register(method string, h HandlerFunc) {
 
 func (node *Node) Listen(ctx context.Context) error {
 	for {
-		// 1.Secure connection
+		// 1. Secure connection
 		node.connMu.RLock()
 		currentConn := node.conn
 		node.connMu.RUnlock()
 
 		if currentConn == nil {
-			// If we don't have an address (server-side), we can't reconnect.
+			// if we don't have an address (server-side), we can't reconnect.
 			if node.dialAddr == "" {
 				return fmt.Errorf("Connection lost and no reconnect address available")
 			}
 
-			// Vtry Reconnect
+			// try Reconnect
 			if err := node.attemptReconnect(ctx); err != nil {
 				return err
 			}
@@ -181,7 +181,7 @@ func (node *Node) Notify(ctx context.Context, method string, params any) error {
 
 	// 3. Create request without ID (JSON-RPC Notification)
 	req := Request{
-		JSONRPC: "2.0",
+		JSONRPC: JRPCVERSION,
 		Method:  method,
 		Params:  pBytes,
 	}

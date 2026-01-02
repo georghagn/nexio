@@ -35,7 +35,7 @@ Bitte beachten Sie auch die README in den jeweiligen Modulen.
 
 ---
 
-#### nexIOnode (pkg/node)
+#### gsfNode (pkg/node)
 
 Das Herzstück der bidirektionalen Kommunikation. Es bricht das klassische Client-Server-Paradigma auf und ersetzt es durch eine symmetrische Peer-Architektur.
 
@@ -45,7 +45,7 @@ Das Herzstück der bidirektionalen Kommunikation. Es bricht das klassische Clien
 
 ---
 
-#### nexIOlog & nexIOlog/rotate (pkg/gsflog)
+#### gsfLog & gsfLog/rotate (pkg/gsflog)
 
 Ein hochperformantes, strukturiertes Logging-System, das für den Langzeitbetrieb in Microservices optimiert wurde.
 
@@ -77,13 +77,13 @@ Verantwortung:
 
 ---
 
-#### nexIOschedule (pkg/schedule)
+#### gsfSchedule (pkg/schedule)
 
-Ein präziser Zeitplaner für wiederkehrende Aufgaben innerhalb der nexIO-Ökosystems.
+Ein präziser Zeitplaner für wiederkehrende Aufgaben innerhalb der gsf-Ökosystems.
 
 * **Interface-Driven:** Aufgaben werden über ein einfaches Interface definiert, was die Ausführung beliebiger Go-Funktionen ermöglicht.
 * **Concurrency-Safe:** Der Scheduler ist darauf ausgelegt, hunderte parallele Jobs zu verwalten, ohne die Echtzeitfähigkeit der RPC-Kommunikation zu beeinträchtigen.
-* **Fehlertoleranz:** Schlägt ein Job fehl, wird dies über das integrierte `nexlog`-System mit vollem Kontext protokolliert.
+* **Fehlertoleranz:** Schlägt ein Job fehl, wird dies über das integrierte `gsfLog`-System mit vollem Kontext protokolliert.
 
 
 - Periodische Jobs (`Every`)
@@ -111,12 +111,14 @@ Die Integration erfolgt auf Anwendungsebene.
 
 ### Beispiele
 
+
+
 Im Verzeichnis `cmd/` befinden sich lauffähige Beispiele:
 
 - `cmd/main.go` – vollständiges Beispiel
 - `cmd/rotate/main.go` – Rotation isoliert
 - `cmd/schedule/main.go` – Scheduler isoliert
-- `cmd/node/gsfNodeExample/.../main.go` – Zusammenspiel von 3 Nodes
+- `cmd/node/gsfNodeExample/.../main.go` – Zusammenspiel von 3 Nodes. Das README im `.../gsfNodeExample` gibt weitere Erläuterungen
 
 Die Beispiele dienen bewusst als ausführbare Dokumentation.
 

@@ -25,7 +25,7 @@ type LogSink interface {
 	With(key string, value any) LogSink
 }
 
-// default in Construktor: Silentlogger No-Op-Logger
+// default in Constructor: Silentlogger No-Op-Logger
 // => no panic if logger is not explicitly set
 type SilentLogger struct{}
 

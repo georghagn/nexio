@@ -15,50 +15,50 @@ import (
 )
 
 func main() {
-	// 1. Kontext für sauberes Beenden
+	// 1. Context for clean shutdown
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	// Provider incl. Log initialize
+	//  initialize provider with logger
 	plogger := gsflog.NewDefaultConsole()
 	plogger.SetLevel(gsflog.LevelInfo)
 	pBaseL := adapter.Wrap(plogger.With("order", "Order_#42"))
 
 	provider := transport.NewWSProvider(pBaseL)
 
-	// 2. Infrastruktur initialisieren
+	// 2. initialize infrastructure
 	addr := "ws://localhost:8080/ws"
 
-	// 3. Den Node erstellen (als Client, daher conn=nil am Anfang)
-	// Wir übergeben den Provider und die Zieladresse für den Reconnect
+	// 3. Create the node (as a client, therefore `conn=nil` at the beginning)
+	// We pass the provider and the target address for the reconnect
 	node := rpc.NewNode(nil, provider, addr, pBaseL)
 
-	// 4. Handler registrieren (Was soll passieren, wenn der Payment-Service uns anruft?)
+	// 4. Register handler (What should happen if the payment service calls us?)
 	node.Register("order.update", func(ctx context.Context, params json.RawMessage) (any, error) {
-		pBaseL.With("params", string(params)).Info("[Order] Status-Update vom Partner erhalten")
+		pBaseL.With("params", string(params)).Info("[Order] Received status update from partner")
 		return "OK", nil
 	})
 
-	// 5. Die aktive Logik (z.B. alle 10 Sekunden eine Zahlung anfordern)
+	// 5. The active logic (e.g. requesting a payment every 10 seconds)
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
 				return
 			case <-time.After(10 * time.Second):
-				pBaseL.Info("[Order] Versuche Zahlung für Order #42...")
-				// Nutze Call für Request-Response
+				pBaseL.Info("[Order] Attempting payment for order #42...")
+				// Use Call for Request-Response
 				res, err := node.Call(ctx, "payment.process", "Order_#42")
 				if err != nil {
-					pBaseL.With("Error", err).Error("[Order] Fehler")
+					pBaseL.With("Error", err).Error("[Order] Error")
 					continue
 				}
-				pBaseL.With("result", string(res)).Info("[Order] Bestätigung erhalten")
+				pBaseL.With("result", string(res)).Info("[Order] Confirmation received")
 			}
 		}
 	}()
 
-	// 6. Den Node starten (blockiert und kümmert sich um Reconnects)
+	// 6. Start the node (blocks and handles reconnects)
 	pBaseL.With("addr", addr).Info("[Order] Service gestartet. Ziel")
 	if err := node.Listen(ctx); err != nil {
 		pBaseL.With("Error", err).Error("[Order] Beendet")

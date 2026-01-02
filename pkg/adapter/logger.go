@@ -1,4 +1,4 @@
-// Copyright 2025 Georg Hagn
+// Copyright 2026 Georg Hagn
 // SPDX-License-Identifier: Apache-2.0
 
 package adapter
@@ -8,7 +8,7 @@ import (
 	"github.com/georghagn/gsf-suite/pkg/node/transport"
 )
 
-// Adapter wickelt einen gsflog.Logger so ein, dass er transport.LogSink erfüllt.
+// The adapter wraps a gsflog.Logger in such a way that it fulfills the requirements of transport.LogSink..
 type Adapter struct {
 	inner *gsflog.Logger
 }

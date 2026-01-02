@@ -49,7 +49,7 @@ const (
 var stdErrorMessages = map[int]string{
 	ErrCodeParseError:      "Parse error",
 	ErrConnectionLostError: "Connection lost during request",
-	ErrCodeJSONError:       "JSON konnte nicht erstellt werden",
+	ErrCodeJSONError:       "JSON could not be created",
 	ErrCodeInvalidRequest:  "Invalid Request",
 	ErrCodeMethodNotFound:  "Method not found",
 	ErrCodeInvalidParams:   "Invalid params",

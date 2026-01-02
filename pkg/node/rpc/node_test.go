@@ -68,7 +68,7 @@ func TestPeerRPC(t *testing.T) {
 	t.Run("Echo-Complex", func(t *testing.T) {
 		complexData := `{"foo":"bar","value":42}`
 		req := Request{
-			JSONRPC: "2.0",
+			JSONRPC: JRPCVERSION,
 			Method:  "echo",
 			Params:  json.RawMessage(complexData),
 			ID:      json.RawMessage(`2`),

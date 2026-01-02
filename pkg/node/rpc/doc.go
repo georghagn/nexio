@@ -16,7 +16,7 @@ Key features:
 
 Example of registering a handler:
 
-	peer.Register("sum", func(ctx context.Context, params json.RawMessage) (any, error) {
+	node.Register("sum", func(ctx context.Context, params json.RawMessage) (any, error) {
 	    vals, _ := rpc.Bind[[]int](params)
 	    return vals[0] + vals[1], nil
 	})
