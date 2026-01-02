@@ -5,13 +5,13 @@
 
 ||[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE) [![Dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)](#)|
 |----|----|
-|![GSF-Suite-Logo](logo-suite.png)| ***GSF-Suite***<br>Die GSF - Suite ist eine Sammlung kleiner, unabhängiger Go-Module zum Bau **einfacher Services**. Teil der **Go Small Frameworks Suite**|
+|![GSF-Suite-Logo](logo-suite.png)| ***GSF-nexIO Suite***<br>Die GSF - Suite ist eine Sammlung kleiner, unabhängiger Go-Module zum Bau **einfacher Services**. Teil der **Go Small Frameworks Suite**|
 
 <sup>***GSF*** steht für ***Go Small Frameworks*** — eine Sammlung von minimalistischen Tools für robuste Anwendungen.</sup>
 
 ### Übersicht
 
-**nexIO** bietet eine Auswahl an minimalen Infrastruktur-Bausteinen für Microservices und serviceorientierte Systeme. Der Fokus liegt auf **Klarheit, geringen Abhängigkeiten und Komponierbarkeit** – ganz nach der pragmatischen Philosophie der *"90%-Lösung"*.
+**GSF-nexIO** bietet eine Auswahl an minimalen Infrastruktur-Bausteinen für Microservices und serviceorientierte Systeme. Der Fokus liegt auf **Klarheit, geringen Abhängigkeiten und Komponierbarkeit** – ganz nach der pragmatischen Philosophie der *"90%-Lösung"*.
 
 Die Module sind bewusst fokussiert:
 
@@ -45,7 +45,7 @@ go node.Listen(ctx)
 
 ### Die Smalltalk-Philosophie
 
-**nexIO** ist das Ergebnis des Versuchs, die Flexibilität und das intuitive Design klassischer Smalltalk-Umgebungen in die moderne Systemprogrammierung mit Go zu übertragen.
+**GSF-nexIO** ist das Ergebnis des Versuchs, die Flexibilität und das intuitive Design klassischer Smalltalk-Umgebungen in die moderne Systemprogrammierung mit Go zu übertragen.
 
 Meine langjährige Erfahrung mit Smalltalk-Systemen (siehe auch meine `TSF`-Projekte) prägt die Architektur von nexIO entscheidend:
 
@@ -120,7 +120,7 @@ Das Verzeichnis `cmd/` enthält selbsterklärenden Code:
 * **Namespace:** `github.com/georghagn/nexio/pkg/...`
 * **Lizenz:** Apache License, Version 2.0.
 
-nexIO ist ein unabhängiges open-source project und ist mit keinem Unternehmen ähnlichen Namens verbunden.
+GSF-nexIO ist ein unabhängiges open-source project und ist mit keinem Unternehmen ähnlichen Namens verbunden.
 
 ---
 

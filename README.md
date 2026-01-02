@@ -3,13 +3,13 @@
 
 ||[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE) [![Go Report Card](https://goreportcard.com/badge/github.com/georghagn/nexio)](https://goreportcard.com/report/github.com/georghagn/nexio)|
 |----|----|
-|![GSF-Suite-Logo](logo-suite.png)| ***nexIO Suite***<br>A collection of minimalist, independent Go modules for robust, distributed **small services**. Member of the **Go Small Frameworks (GSF)** family.|
+|![GSF-Suite-Logo](logo-suite.png)| ***GSF-nexIO Suite***<br>A collection of minimalist, independent Go modules for robust, distributed **small services**. Member of the **Go Small Frameworks (GSF)** family.|
 
 <sup>***GSF*** stands for ***Go Small Frameworks*** — minimalist tools for robust applications.</sup>
 
 ### Overview
 
-**nexIO** provides a set of minimal infrastructure building blocks for microservices and service-oriented systems. The focus is on **clarity, low dependencies, and composability**, following a pragmatic *"90% solution"* philosophy.
+**GSF-nexIO** provides a set of minimal infrastructure building blocks for microservices and service-oriented systems. The focus is on **clarity, low dependencies, and composability**, following a pragmatic *"90% solution"* philosophy.
 
 The modules are intentionally focused:
 - Solve one specific problem well
@@ -20,10 +20,14 @@ The modules are intentionally focused:
 ---
 
 ### Quick Start: Create a node in 3 lines
+
+```go
 logger := nexlog.Wrap(nexlog.NewDefaultConsole())
 provider := transport.NewWSProvider(logger)
 node := rpc.NewNode(nil, provider, "ws://localhost:8080/ws", logger)
 go node.Listen(ctx)
+
+```
 
 ---
 
@@ -38,7 +42,7 @@ go node.Listen(ctx)
 
 ### The Smalltalk Philosophy
 
-**nexIO** is the result of porting the flexibility and intuitive design of classic Smalltalk environments into modern systems programming with Go.
+**GSF-nexIO** is the result of porting the flexibility and intuitive design of classic Smalltalk environments into modern systems programming with Go.
 
 My long-standing experience with Smalltalk systems (see also my `TSF` projects) deeply influences the architecture of nexIO:
 
@@ -109,7 +113,7 @@ The `cmd/` directory contains self-documenting code:
 * **Namespace:** `github.com/georghagn/nexio/pkg/...`
 * **License:** Apache License, Version 2.0.
 
-nexIO is an independent open-source project and is not affiliated with any corporation of a similar name.
+GSF-nexIO is an independent open-source project and is not affiliated with any corporation of a similar name.
 
 ---
 
