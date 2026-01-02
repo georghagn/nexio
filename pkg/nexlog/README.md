@@ -1,6 +1,3 @@
-<sub>🇩🇪 [German translation →](README.de.md)</sub>
-
----
 
 ### Overview
 
