@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/georghagn/gsf-go/pkg/rotate"
+	"github.com/georghagn/nexio/pkg/rotate"
 )
 
 // rotate-example demonstrates the rotate module in isolation.

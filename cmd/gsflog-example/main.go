@@ -6,8 +6,8 @@ package main
 import (
 	"fmt"
 
-	"github.com/georghagn/gsf-go/pkg/gsflog"
-	"github.com/georghagn/gsf-go/pkg/rotate"
+	"github.com/georghagn/nexio/pkg/gsflog"
+	"github.com/georghagn/nexio/pkg/rotate"
 )
 
 func main() {

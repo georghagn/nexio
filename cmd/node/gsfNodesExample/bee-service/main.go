@@ -8,10 +8,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/georghagn/gsf-suite/pkg/adapter"
-	"github.com/georghagn/gsf-suite/pkg/gsflog"
-	"github.com/georghagn/gsf-suite/pkg/node/rpc"
-	"github.com/georghagn/gsf-suite/pkg/node/transport"
+	"github.com/georghagn/nexio/pkg/adapter"
+	"github.com/georghagn/nexio/pkg/gsflog"
+	"github.com/georghagn/nexio/pkg/node/rpc"
+	"github.com/georghagn/nexio/pkg/node/transport"
 )
 
 func main() {

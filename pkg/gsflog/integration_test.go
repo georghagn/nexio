@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/georghagn/gsf-suite/pkg/gsflog"
-	"github.com/georghagn/gsf-suite/pkg/rotate"
+	"github.com/georghagn/nexio/pkg/gsflog"
+	"github.com/georghagn/nexio/pkg/rotate"
 )
 
 func TestLoggerWithRotatorIntegration(t *testing.T) {

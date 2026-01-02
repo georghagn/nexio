@@ -33,7 +33,7 @@ The decision to rotate is delegated to specific **Policies**.
 ## Installation
 
 ```bash
-go get github.com/georghagn/gsf-go/pkg/rotate
+go get github.com/georghagn/nexio/pkg/rotate
 
 ```
 
@@ -45,7 +45,7 @@ The simplest way: A rotator that starts a new file at 10 MB and keeps all old fi
 package main
 
 import (
-    "github.com/georghagn/gsf-go/pkg/rotate"
+    "github.com/georghagn/nexio/pkg/rotate"
 )
 
 func main() {
@@ -89,7 +89,7 @@ writer.Write([]byte("Hello World\n"))
 If you use an external process (like a standalone Scheduler) to trigger rotation while another process is writing, use the **Atomic File Lock**:
 
 ```go
-import "github.com/georghagn/gsf-go/pkg/rotate/lock"
+import "github.com/georghagn/nexio/pkg/rotate/lock"
 
 // See documentation (doc.go) for implementation details on 
 // cross-platform safety (Windows vs. iOS/Linux).

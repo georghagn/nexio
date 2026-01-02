@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	reopen "github.com/georghagn/gsf-suite/pkg/gsflog/writer/reopen"
+	reopen "github.com/georghagn/nexio/pkg/gsflog/writer/reopen"
 )
 
 func TestReopenableWriter(t *testing.T) {

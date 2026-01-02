@@ -23,7 +23,7 @@ Er richtet sich an kleine Services und Infrastruktur-Code, bei denen Einfachheit
 ### Installation
 
 ```bash
-go get github.com/georghagn/gsf-go/pkg/gsflog
+go get github.com/georghagn/nexio/pkg/gsflog
 ````
 ---
 

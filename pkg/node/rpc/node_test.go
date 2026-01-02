@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/georghagn/gsf-suite/pkg/node/transport"
+	"github.com/georghagn/nexio/pkg/node/transport"
 )
 
 func TestPeerRPC(t *testing.T) {

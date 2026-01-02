@@ -6,7 +6,7 @@ package gsflog
 import (
 	"io"
 
-	"github.com/georghagn/gsf-suite/pkg/rotate"
+	"github.com/georghagn/nexio/pkg/rotate"
 )
 
 func NewFileSink(out io.Writer, level Level, formatter Formatter) LogSink {

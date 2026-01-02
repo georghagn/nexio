@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/georghagn/gsf-suite/pkg/rotate/lock"
+	"github.com/georghagn/nexio/pkg/rotate/lock"
 )
 
 type RotateReason string

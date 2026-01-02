@@ -4,8 +4,8 @@
 package adapter
 
 import (
-	"github.com/georghagn/gsf-suite/pkg/gsflog"
-	"github.com/georghagn/gsf-suite/pkg/node/transport"
+	"github.com/georghagn/nexio/pkg/gsflog"
+	"github.com/georghagn/nexio/pkg/node/transport"
 )
 
 // The adapter wraps a gsflog.Logger in such a way that it fulfills the requirements of transport.LogSink..
@@ -25,7 +25,7 @@ func (a *Adapter) Warn(msg string)  { a.inner.Warn(msg) }
 func (a *Adapter) Error(msg string) { a.inner.Error(msg) }
 
 // With ensures that the context is preserved and the result
-// again meets the correct gsf-suite interface.
+// again meets the correct nexio interface.
 func (a *Adapter) With(key string, value any) transport.LogSink {
 	return &Adapter{
 		inner: a.inner.With(key, value).(*gsflog.Logger),

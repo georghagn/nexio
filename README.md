@@ -14,7 +14,7 @@
 GSF is a collection of small, independent Go modules for building **small and simple services**.
 The focus is on **clarity, low dependencies, and composability**, following a pragmatic *"90% solution"* philosophy.
 
-This repository (`gsf-go`) contains the Go implementation of GSF.
+This repository (`nexIO`) contains the Go implementation of GSF.
 
 GSF (Go Small Frameworks) provides a set of minimal infrastructure building blocks for microservices and service-oriented systems.
 
@@ -160,7 +160,7 @@ GSF is infrastructure glue, not a platform.
 ### Organizational & Standards
 
 * **Copyright:** © 2026 Georg Hagn.
-* **Namespace:** All modules follow the naming convention `github.com/georghagn/gsf-suite/pkg/...`.
+* **Namespace:** All modules follow the naming convention `github.com/georghagn/nexIO/pkg/...`.
 * **Clean Code:** Strict separation of transport logic (WebSockets) and application logic (RPC).
 
 ---

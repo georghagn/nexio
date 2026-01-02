@@ -4,17 +4,6 @@
 
 # Sicherheitsrichtlinie (Security Policy)
 
-## Unterstützte Versionen
-
-GSF (Go Small Services) befindet sich derzeit in einer **frühen öffentlichen Entwicklungsphase**.
-
-* Versionen **vor v1.0.0** werden nach dem *Best-Effort-Prinzip* bereitgestellt.
-* Sicherheitsfixes können erfolgen, ohne vollständige Abwärtskompatibilität zu garantieren.
-
-Sobald ein Modul den Status **v1.0.0** erreicht, werden **kritische Sicherheitsprobleme** mit entsprechenden Releases adressiert.
-
----
-
 ## Melden von Sicherheitslücken
 
 Wenn du eine potenzielle Sicherheitslücke entdeckst, **bitte kein öffentliches Issue eröffnen**.

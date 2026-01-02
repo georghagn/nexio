@@ -1,9 +1,9 @@
-Here is an overview of `gsf-suite/node` architecture as a reference for code study.
+Here is an overview of `nexio/node` architecture as a reference for code study.
 
 ### Projektstructure
 
 ```text
-gsf-suite/
+nexio/
 ├── cmd/node/
 │   └── main.go           # Dispatcher: Controls lifecycle & flags
 ├── pkg/transport/

@@ -4,17 +4,6 @@
 
 # Security Policy
 
-## Supported Versions
-
-GSF (Go Small Services) is currently in **early public development**.
-
-* Versions **before v1.0.0** are provided on a best-effort basis
-* Security fixes may be released without maintaining backward compatibility
-
-Once a module reaches **v1.0.0**, critical security issues will be addressed with appropriate releases.
-
----
-
 ## Reporting a Vulnerability
 
 If you discover a security vulnerability, please **do not open a public issue**.

@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/georghagn/gsf-suite/pkg/node/transport"
+	"github.com/georghagn/nexio/pkg/node/transport"
 )
 
 type HandlerFunc func(ctx context.Context, params json.RawMessage) (any, error)

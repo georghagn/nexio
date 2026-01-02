@@ -15,7 +15,7 @@ GSF (Go Small Frameworks) ist eine Sammlung kleiner, unabhängiger Go-Module zum
 
 Der Fokus liegt auf **Klarheit, wenigen Abhängigkeiten und expliziter Zusammensetzung**, nach dem Prinzip einer pragmatischen *90%-Lösung*.
 
-Dieses Repository (`gsf-go`) enthält die Go-Implementierung von GSF.
+Dieses Repository (`nexIO`) enthält die Go-Implementierung von GSF.
 
 ---
 
@@ -45,7 +45,7 @@ Das Herzstück der bidirektionalen Kommunikation. Es bricht das klassische Clien
 
 ---
 
-#### gsfLog & gsfLog/rotate (pkg/gsflog)
+#### nexIOlog & nexIOlog/rotate (pkg/gsflog)
 
 Ein hochperformantes, strukturiertes Logging-System, das für den Langzeitbetrieb in Microservices optimiert wurde.
 
@@ -77,7 +77,7 @@ Verantwortung:
 
 ---
 
-#### gsfSchedule (pkg/schedule)
+#### nexIOschedule (pkg/schedule)
 
 Ein präziser Zeitplaner für wiederkehrende Aufgaben innerhalb der gsf-Ökosystems.
 
@@ -140,7 +140,7 @@ GSF ist Infrastruktur-Baustein, kein Framework.
 ### Organisatorisches & Standards
 
 * **Copyright:** © 2026 Georg Hagn.
-* **Namespace:** Alle Module folgen der Namenskonvention `github.com/georghagn/gsf-suite/pkg/...`.
+* **Namespace:** Alle Module folgen der Namenskonvention `github.com/georghagn/nexIO/pkg/...`.
 * **Clean Code:** Strikte Trennung von Transport-Logik (WebSockets) und Applikations-Logik (RPC).
 
 ---

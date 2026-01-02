@@ -10,10 +10,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/georghagn/gsf-suite/pkg/adapter"
-	"github.com/georghagn/gsf-suite/pkg/gsflog"
-	"github.com/georghagn/gsf-suite/pkg/node/rpc"
-	"github.com/georghagn/gsf-suite/pkg/node/transport"
+	"github.com/georghagn/nexio/pkg/adapter"
+	"github.com/georghagn/nexio/pkg/node/rpc"
+	"github.com/georghagn/nexio/pkg/node/transport"
+	"github.com/georghagn/nexio/pkg/gsflog"
 )
 
 func main() {

@@ -22,7 +22,7 @@ Im Gegensatz zu einem einfachen `time.Ticker` bietet dieses Paket **Panic Recove
 ## Installation
 
 ```bash
-go get github.com/georghagn/gsf-go/pkg/schedule
+go get github.com/georghagn/nexio/pkg/schedule
 ````
 
 
@@ -34,7 +34,7 @@ package main
 import (
     "fmt"
     "time"
-    "github.com/georghagn/gsf-go/pkg/schedule"
+    "github.com/georghagn/nexio/pkg/schedule"
 )
 
 func main() {
@@ -121,7 +121,7 @@ if err != nil {
 
 ### Jobs auflisten (`List`)
 
-Das `List()` Feature ist besonders mächtig, um via RPC (z.B. mit `pkg/nexio`) oder in einem Admin-Panel zu sehen, was gerade passiert.
+Das `List()` Feature ist besonders mächtig, um via RPC (z.B. mit `pkg/node`) oder in einem Admin-Panel zu sehen, was gerade passiert.
 
 ```go
 jobs := sched.List()
