@@ -43,6 +43,20 @@ go node.Listen(ctx)
 
 ---
 
+### Die Smalltalk-Philosophie
+
+**nexIO** ist das Ergebnis des Versuchs, die Flexibilität und das intuitive Design klassischer Smalltalk-Umgebungen in die moderne Systemprogrammierung mit Go zu übertragen.
+
+Meine langjährige Erfahrung mit Smalltalk-Systemen (siehe auch meine `TSF`-Projekte) prägt die Architektur von nexIO entscheidend:
+
+* **Nachrichtenaustausch statt Funktionsaufrufe:** Inspiriert durch das Smalltalk-Paradigma „Everything is a Message“, konzentriert sich nexIO auf den freien Fluss von Nachrichten zwischen Objekten, anstatt auf starre Client-Server-Hierarchien.
+* **Objekt-Symmetrie:** In Smalltalk sind Objekte gleichberechtigte Akteure. Diese Philosophie spiegelt sich in unseren **Symmetrical Nodes** wider, die gleichzeitig Sender und Empfänger sein können.
+* **Entkopplung & Komposition:** Smalltalk-Systeme glänzen durch ihre Fähigkeit, einfache, spezialisierte Komponenten zu komplexen Systemen zu kombinieren. nexIO folgt diesem Vorbild durch strikt entkoppelte Module, die über Interfaces kommunizieren.
+
+**Warum Go?** nexIO schlägt die Brücke: Die bewährten Interaktionsmuster aus der Smalltalk-Welt treffen hier auf die Typsicherheit, Nebenläufigkeit (Goroutines) und Performance von Go.
+
+---
+
 ### Module
 
 * **[node](https://www.google.com/search?q=./pkg/node)**: Resiliente P2P RPC-Kommunikation.
@@ -105,6 +119,8 @@ Das Verzeichnis `cmd/` enthält selbsterklärenden Code:
 * **Copyright:** © 2026 Georg Hagn.
 * **Namespace:** `github.com/georghagn/nexio/pkg/...`
 * **Lizenz:** Apache License, Version 2.0.
+
+nexIO ist ein unabhängiges open-source project und ist mit keinem Unternehmen ähnlichen Namens verbunden.
 
 ---
 
