@@ -56,10 +56,10 @@ My long-standing experience with Smalltalk systems (see also my `TSF` projects) 
 
 ### Modules
 
-- [**node**](./pkg/node): Resilient P2P RPC communication.
-- [**nexlog**](./pkg/nexlog): Structured logging with adapter support.
-- [**rotate**](./pkg/nexlog/rotate): Safe file rotation with `.LOCK` synchronization.
-- [**schedule**](./pkg/schedule): Reliable task scheduling.
+- [**node**](./node): Resilient P2P RPC communication.
+- [**nexlog**](./nexlog): Structured logging with adapter support.
+- [**rotate**](./nexlog/rotate): Safe file rotation with `.LOCK` synchronization.
+- [**schedule**](./schedule): Reliable task scheduling.
 
 
 #### nexIOnode (`pkg/node`)
@@ -70,7 +70,7 @@ The core of bidirectional communication. It replaces the classic client-server p
 * **Resilience Engine:** Integrated state machine with exponential backoff for transparent reconnection.
 * **Type Safety:** Uses Go generics (`Bind[T]`) for secure JSON-RPC parameter handling.
 
-#### nexlog & rotate (`pkg/nexlog` & `pkg/nexlog/rotate`)
+#### nexlog & rotate (`nexlog` & `nexlog/rotate`)
 A structured logging system optimized for long-term operation.
 
 * **Interface Abstraction:** Decoupled via `LogSink`, allowing usage in any module without hard dependencies.
@@ -78,7 +78,7 @@ A structured logging system optimized for long-term operation.
 * **Safe Operations:** Each log event follows an **Open -> Write -> Close** cycle, guaranteeing integrity even during system crashes.
 * **Contextual Tracing:** Supports field enrichment via `With(key, value)` for distributed tracing.
 
-#### nexIOschedule (`pkg/schedule`)
+#### nexIOschedule (`schedule`)
 A precise, panic-safe scheduler for recurring tasks.
 
 * **Interface-Driven:** Execute any Go function through a simple task interface.

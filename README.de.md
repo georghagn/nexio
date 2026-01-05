@@ -59,12 +59,12 @@ Meine langjährige Erfahrung mit Smalltalk-Systemen (siehe auch meine `TSF`-Proj
 
 ### Module
 
-* **[node](https://www.google.com/search?q=./pkg/node)**: Resiliente P2P RPC-Kommunikation.
-* **[nexlog](https://www.google.com/search?q=./pkg/nexlog)**: Strukturiertes Logging mit Adapter-Unterstützung.
-* **[rotate](https://www.google.com/search?q=./pkg/nexlog/rotate)**: Sicherer Datei-Rotator mit `.LOCK`-Synchronisierung.
-* **[schedule](https://www.google.com/search?q=./pkg/schedule)**: Zuverlässige Aufgabenplanung (Scheduling).
+* [**node**](./node): Resiliente P2P RPC-Kommunikation.
+* [**nexlog**](./nexlog): Strukturiertes Logging mit Adapter-Unterstützung.
+* [**rotate**](./nexlog/rotate): Sicherer Datei-Rotator mit `.LOCK`-Synchronisierung.
+* [**schedule**](./schedule): Zuverlässige Aufgabenplanung (Scheduling).
 
-#### nexIOnode (`pkg/node`)
+#### nexIOnode (`node`)
 
 Das Herzstück der bidirektionalen Kommunikation. Es bricht mit dem klassischen Client-Server-Paradigma und ersetzt es durch eine **symmetrische Peer-Architektur**.
 
@@ -73,7 +73,7 @@ Das Herzstück der bidirektionalen Kommunikation. Es bricht mit dem klassischen 
 * **Resilienz-Engine:** Integrierter Zustandsautomat mit exponentiellem Backoff für transparente Wiederverbindungen.
 * **Typsicherheit:** Nutzt Go Generics (`Bind[T]`), um JSON-RPC-Parameter sicher in native Go-Strukturen zu überführen.
 
-#### nexlog & rotate (`pkg/nexlog` & `pkg/nexlog/rotate`)
+#### nexlog & rotate (`nexlog` & `nexlog/rotate`)
 
 Ein strukturiertes Logging-System, optimiert für den Langzeitbetrieb.
 
@@ -82,7 +82,7 @@ Ein strukturiertes Logging-System, optimiert für den Langzeitbetrieb.
 * **Sichere Operationen:** Jedes Log-Ereignis folgt einem **Open -> Write -> Close** Zyklus, was die Integrität auch bei Systemabstürzen garantiert.
 * **Kontextuelles Tracing:** Unterstützt die Anreicherung von Feldern via `With(key, value)` für verteiltes Tracing.
 
-#### nexIOschedule (`pkg/schedule`)
+#### nexIOschedule (`schedule`)
 
 Ein präziser, "panic-sicherer" Scheduler für wiederkehrende Aufgaben.
 

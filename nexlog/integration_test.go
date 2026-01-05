@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/georghagn/nexio/pkg/nexlog"
-	"github.com/georghagn/nexio/pkg/rotate"
+	"github.com/georghagn/nexio/nexlog"
+	"github.com/georghagn/nexio/rotate"
 )
 
 func TestLoggerWithRotatorIntegration(t *testing.T) {

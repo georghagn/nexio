@@ -24,16 +24,16 @@ Key Features:
     `Inter-Process Compatibility` with an "Open-Write-Close" strategy to ensure
     that files are not locked indefinitely, allowing external tools to rotate
     or archive logs safely. The goal is NOT performance but safety
-    (see pkg/nexlog/writer/lockwriter).
+    (see nexlog/writer/lockwriter).
 
     -- ReopenableWriter: Is an io.WriteCloser that can be reopened at runtime.
     This is useful for logrotate strategies (e.g., via scheduler or SIGHUP),
     where the file is moved externally and the process needs to renew the file
-    handle (see pkg/nexlog/writer/reopen).
+    handle (see nexlog/writer/reopen).
 
     -- Rotator: It is the default io.Writer implementation for nexlog. Used as
     inline-process it offers the fastest and safest write-strategy
-    (see pkg/nexlog/rotate).
+    (see nexlog/rotate).
 
   - Log Levels: Standard levels including Debug, Info, Warn, Error, and Fatal.
 

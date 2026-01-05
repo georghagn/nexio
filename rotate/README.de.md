@@ -32,7 +32,7 @@ Die Entscheidung zur Rotation wird an Policies delegiert.
 ## Installation
 
 ```bash
-go get github.com/georghagn/nexio/pkg/rotate
+go get github.com/georghagn/nexio/rotate
 ````
 
 ## Quick Start
@@ -43,7 +43,7 @@ Der einfachste Weg: Ein Rotator, der bei 10 MB eine neue Datei anfängt und alte
 package main
 
 import (
-    "github.com/georghagn/nexio/pkg/rotate"
+    "github.com/georghagn/nexio/rotate"
 )
 
 func main() {

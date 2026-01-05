@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	reopen "github.com/georghagn/nexio/pkg/nexlog/writer/reopen"
+	reopen "github.com/georghagn/nexio/nexlog/writer/reopen"
 )
 
 func TestReopenableWriter(t *testing.T) {

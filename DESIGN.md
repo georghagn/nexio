@@ -72,7 +72,7 @@ This improves:
 
 ---
 
-## Rotator (`pkg/rotate`)
+## Rotator (`rotate`)
 
 ### Responsibility
 
@@ -187,7 +187,7 @@ With the `LockWriter` rotator and logger support this scenarios
 
 ---
 
-## Scheduler (`pkg/schedule`)
+## Scheduler (`schedule`)
 
 ### Responsibility
 

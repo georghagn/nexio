@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/georghagn/nexio/pkg/rotate/lock"
+	"github.com/georghagn/nexio/rotate/lock"
 )
 
 func TestFileLock_AcquireAndRelease(t *testing.T) {

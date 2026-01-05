@@ -23,7 +23,7 @@ Unlike a simple `time.Ticker`, this package provides **panic recovery**, **job m
 ## Installation
 
 ```bash
-go get github.com/georghagn/nexio/pkg/schedule
+go get github.com/georghagn/nexio/schedule
 
 ```
 
@@ -35,7 +35,7 @@ package main
 import (
     "fmt"
     "time"
-    "github.com/georghagn/nexio/pkg/schedule"
+    "github.com/georghagn/nexio/schedule"
 )
 
 func main() {

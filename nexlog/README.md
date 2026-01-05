@@ -18,7 +18,7 @@ It is designed for small services and infrastructure code where simplicity, expl
 ### Installation
 
 ```bash
-go get github.com/georghagn/nexio/pkg/nexlog
+go get github.com/georghagn/nexio/nexlog
 ````
 ---
 

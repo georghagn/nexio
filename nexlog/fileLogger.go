@@ -6,7 +6,7 @@ package nexlog
 import (
 	"io"
 
-	"github.com/georghagn/nexio/pkg/rotate"
+	"github.com/georghagn/nexio/rotate"
 )
 
 func NewFileSink(out io.Writer, level Level, formatter Formatter) LogSink {

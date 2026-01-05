@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/georghagn/nexio/pkg/schedule"
+	"github.com/georghagn/nexio/schedule"
 )
 
 // simpleLogger is a minimal logger implementation used only for the example.

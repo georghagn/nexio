@@ -4,8 +4,8 @@
 package adapter
 
 import (
-	"github.com/georghagn/nexio/pkg/nexlog"
-	"github.com/georghagn/nexio/pkg/node/transport"
+	"github.com/georghagn/nexio/nexlog"
+	"github.com/georghagn/nexio/node/transport"
 )
 
 // The adapter wraps a nexlog.Logger in such a way that it fulfills the requirements of transport.LogSink..

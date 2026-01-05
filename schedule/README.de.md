@@ -22,7 +22,7 @@ Im Gegensatz zu einem einfachen `time.Ticker` bietet dieses Paket **Panic Recove
 ## Installation
 
 ```bash
-go get github.com/georghagn/nexio/pkg/schedule
+go get github.com/georghagn/nexio/schedule
 ````
 
 
@@ -34,7 +34,7 @@ package main
 import (
     "fmt"
     "time"
-    "github.com/georghagn/nexio/pkg/schedule"
+    "github.com/georghagn/nexio/schedule"
 )
 
 func main() {

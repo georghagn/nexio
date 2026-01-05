@@ -10,10 +10,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/georghagn/nexio/pkg/adapter"
-	"github.com/georghagn/nexio/pkg/node/rpc"
-	"github.com/georghagn/nexio/pkg/node/transport"
-	"github.com/georghagn/nexio/pkg/nexlog"
+	"github.com/georghagn/nexio/adapter"
+	"github.com/georghagn/nexio/node/rpc"
+	"github.com/georghagn/nexio/node/transport"
+	"github.com/georghagn/nexio/nexlog"
 )
 
 func main() {

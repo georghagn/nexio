@@ -6,8 +6,8 @@ package main
 import (
 	"fmt"
 
-	"github.com/georghagn/nexio/pkg/nexlog"
-	"github.com/georghagn/nexio/pkg/rotate"
+	"github.com/georghagn/nexio/nexlog"
+	"github.com/georghagn/nexio/rotate"
 )
 
 func main() {
