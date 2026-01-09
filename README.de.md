@@ -131,3 +131,11 @@ Beiträge sind willkommen! Bitte nutzen Sie GitHub Issues für Fehlerberichte od
 
 ---
 
+## Kontakt
+
+Bei Fragen oder Interesse an diesem Projekt erreichen Sie mich unter:
+📧 *georghagn [at] tiny-frameworks.io*
+
+<sup>*(Bitte keine Anfragen an die privaten GitHub-Account-Adressen)*</sup>
+
+

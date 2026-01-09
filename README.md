@@ -110,8 +110,9 @@ The `cmd/` directory contains self-documenting code:
 ### Organizational & Standards
 
 * **Copyright:** © 2026 Georg Hagn.
-* **Namespace:** `github.com/georghagn/nexio/pkg/...`
+* **Namespace:** `github.com/georghagn/nexio/...`
 * **License:** Apache License, Version 2.0.
+
 
 GSF-nexIO is an independent open-source project and is not affiliated with any corporation of a similar name.
 
@@ -121,4 +122,11 @@ GSF-nexIO is an independent open-source project and is not affiliated with any c
 
 Contributions are welcome! Please use GitHub Issues for bug reports or feature ideas.
 **Security-related topics** should not be discussed publicly; please refer to `SECURITY.md`.
+
+---
+
+## Contact
+
+If you have any questions or are interested in this project, you can reach me at
+📧 *georghagn [at] tiny-frameworks.io*
 
